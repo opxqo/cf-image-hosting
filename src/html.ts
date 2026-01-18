@@ -99,7 +99,7 @@ export const loginPage = `
 </html>
 `;
 
-export const htmlContent = \`
+export const htmlContent = `
 <!DOCTYPE html>
 <html lang="zh-CN">
 <head>
@@ -276,7 +276,6 @@ export const htmlContent = \`
             setTimeout(() => toast.classList.remove('show'), 2000);
         }
 
-        // Logout
         $('logout').onclick = async () => {
             await fetch('/api/logout', { method: 'POST' });
             location.href = '/login';
@@ -323,33 +322,33 @@ export const htmlContent = \`
                 const res = await fetch('/api/images');
                 if (res.status === 401) { location.href = '/login'; return; }
                 const data = await res.json();
-                if (data.images?.length) {
+                if (data.images && data.images.length) {
                     gallery.innerHTML = '<div class="grid"></div>';
                     const grid = gallery.querySelector('.grid');
                     data.images.forEach(img => {
                         const el = document.createElement('div');
                         el.className = 'grid-item';
-                        el.innerHTML = \\\`
-                            <img data-src="\\\${img.thumb}" data-full="\\\${img.url}">
-                            <div class="actions">
-                                <button class="btn-copy">复制</button>
-                                <button class="btn-del">删除</button>
-                            </div>
-                        \\\`;
                         
-                        const imgEl = el.querySelector('img');
+                        const imgEl = document.createElement('img');
+                        const actionsDiv = document.createElement('div');
+                        actionsDiv.className = 'actions';
+                        actionsDiv.innerHTML = '<button class="btn-copy">复制</button><button class="btn-del">删除</button>';
+                        
+                        el.appendChild(imgEl);
+                        el.appendChild(actionsDiv);
+                        
                         const image = new Image();
                         image.onload = () => { imgEl.src = img.thumb; el.classList.add('loaded'); };
                         image.onerror = () => { imgEl.src = img.url; el.classList.add('loaded'); };
                         image.src = img.thumb;
                         
                         imgEl.onclick = () => { preview.src = img.url; modal.classList.add('show'); };
-                        el.querySelector('.btn-copy').onclick = async e => {
+                        actionsDiv.querySelector('.btn-copy').onclick = async e => {
                             e.stopPropagation();
                             await navigator.clipboard.writeText(img.url);
                             showToast('已复制');
                         };
-                        el.querySelector('.btn-del').onclick = async e => {
+                        actionsDiv.querySelector('.btn-del').onclick = async e => {
                             e.stopPropagation();
                             if (!confirm('确定删除？')) return;
                             const res = await fetch('/api/images/' + img.key, { method: 'DELETE' });
@@ -373,4 +372,4 @@ export const htmlContent = \`
     </script>
 </body>
 </html>
-\`;
+`;
