@@ -294,6 +294,7 @@ export const htmlContent = `
         const uploadFolder = $('upload-folder');
         const folderTabs = $('folder-tabs');
         let currentFolder = '默认';
+        let localFolders = new Set(); // 存储本地新建但尚未有图片的文件夹
 
         function showToast(msg) {
             toast.textContent = msg;
@@ -310,40 +311,52 @@ export const htmlContent = `
         $('new-folder').onclick = () => {
             const name = prompt('请输入文件夹名称：');
             if (name && name.trim()) {
-                const opt = document.createElement('option');
-                opt.value = name.trim();
-                opt.textContent = name.trim();
-                uploadFolder.appendChild(opt);
-                uploadFolder.value = name.trim();
-                loadFolders();
+                const folderName = name.trim();
+                localFolders.add(folderName);
+                updateFolderUI();
+                uploadFolder.value = folderName;
+                showToast('文件夹已创建，上传图片后生效');
             }
         };
 
+        // 更新文件夹 UI
+        function updateFolderUI() {
+            const allFolders = Array.from(new Set([...serverFolders, ...localFolders]));
+            
+            uploadFolder.innerHTML = allFolders.map(f => 
+                '<option value="' + f + '">' + f + '</option>'
+            ).join('');
+            
+            folderTabs.innerHTML = allFolders.map(f => 
+                '<button class="folder-tab' + (f === currentFolder ? ' active' : '') + '" data-folder="' + f + '">' + f + '</button>'
+            ).join('');
+            
+            folderTabs.querySelectorAll('.folder-tab').forEach(btn => {
+                btn.onclick = () => {
+                    currentFolder = btn.dataset.folder;
+                    folderTabs.querySelectorAll('.folder-tab').forEach(b => b.classList.remove('active'));
+                    btn.classList.add('active');
+                    loadGallery();
+                };
+            });
+        }
+
+        let serverFolders = ['默认'];
+        
         // 加载文件夹列表
         async function loadFolders() {
             try {
                 const res = await fetch('/api/folders');
                 const data = await res.json();
                 if (data.folders) {
-                    uploadFolder.innerHTML = data.folders.map(f => 
-                        '<option value="' + f + '">' + f + '</option>'
-                    ).join('');
-                    
-                    folderTabs.innerHTML = data.folders.map(f => 
-                        '<button class="folder-tab' + (f === currentFolder ? ' active' : '') + '" data-folder="' + f + '">' + f + '</button>'
-                    ).join('');
-                    
-                    folderTabs.querySelectorAll('.folder-tab').forEach(btn => {
-                        btn.onclick = () => {
-                            currentFolder = btn.dataset.folder;
-                            folderTabs.querySelectorAll('.folder-tab').forEach(b => b.classList.remove('active'));
-                            btn.classList.add('active');
-                            loadGallery();
-                        };
-                    });
+                    serverFolders = data.folders;
+                    // 已上传的文件夹从 localFolders 中移除
+                    serverFolders.forEach(f => localFolders.delete(f));
+                    updateFolderUI();
                 }
             } catch {}
         }
+
 
         upload.onclick = () => file.click();
         upload.ondragover = e => { e.preventDefault(); upload.classList.add('active'); };
