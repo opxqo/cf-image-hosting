@@ -13,6 +13,22 @@ app.get('/', (c) => {
     return c.html(htmlContent);
 });
 
+// 图片列表 API
+app.get('/api/images', async (c) => {
+    try {
+        const list = await c.env.MY_BUCKET.list({ limit: 100 });
+        const images = list.objects.map((obj) => ({
+            key: obj.key,
+            size: obj.size,
+            uploaded: obj.uploaded.toISOString(),
+            url: new URL(c.req.url).origin + '/' + obj.key,
+        }));
+        return c.json({ success: true, images });
+    } catch (err) {
+        return c.json({ success: false, message: String(err) }, 500);
+    }
+});
+
 // 图片上传 API
 app.post('/upload', async (c) => {
     // 1. 鉴权
@@ -55,6 +71,25 @@ app.post('/upload', async (c) => {
         });
     } catch (err) {
         return c.json({ success: false, message: 'Failed to upload to R2', error: String(err) }, 500);
+    }
+});
+
+// 删除图片 API
+app.delete('/api/images/:key', async (c) => {
+    const authToken = c.env.AUTH_TOKEN;
+    if (authToken) {
+        const authHeader = c.req.header('Authorization');
+        if (!authHeader || !authHeader.endsWith(authToken)) {
+            return c.json({ success: false, message: 'Unauthorized' }, 401);
+        }
+    }
+
+    const key = c.req.param('key');
+    try {
+        await c.env.MY_BUCKET.delete(key);
+        return c.json({ success: true });
+    } catch (err) {
+        return c.json({ success: false, message: String(err) }, 500);
     }
 });
 
