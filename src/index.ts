@@ -10,12 +10,10 @@ type Bindings = {
 
 const app = new Hono<{ Bindings: Bindings }>();
 
-// 简单的 session token 生成
 function generateToken(): string {
     return crypto.randomUUID() + '-' + Date.now();
 }
 
-// 验证登录状态
 function isLoggedIn(c: any): boolean {
     const token = getCookie(c, 'session');
     return !!token && token.length > 10;
@@ -40,7 +38,7 @@ app.post('/api/login', async (c) => {
             httpOnly: true,
             secure: true,
             sameSite: 'Strict',
-            maxAge: 60 * 60 * 24 * 7, // 7 天
+            maxAge: 60 * 60 * 24 * 7,
         });
         return c.json({ success: true });
     }
@@ -53,34 +51,69 @@ app.post('/api/logout', (c) => {
     return c.json({ success: true });
 });
 
-// 首页 - 需要登录
+// 首页
 app.get('/', (c) => {
     if (!isLoggedIn(c)) return c.redirect('/login');
     return c.html(htmlContent);
 });
 
-// 图片列表 API - 需要登录
-app.get('/api/images', async (c) => {
+// 获取文件夹列表
+app.get('/api/folders', async (c) => {
     if (!isLoggedIn(c)) return c.json({ success: false, message: 'Unauthorized' }, 401);
 
     try {
-        const list = await c.env.MY_BUCKET.list({ limit: 100 });
+        const list = await c.env.MY_BUCKET.list({ limit: 1000 });
+        const folders = new Set<string>();
+        folders.add('默认'); // 默认文件夹
+
+        list.objects.forEach((obj) => {
+            if (obj.key.includes('/')) {
+                folders.add(obj.key.split('/')[0]);
+            }
+        });
+
+        return c.json({ success: true, folders: Array.from(folders) });
+    } catch (err) {
+        return c.json({ success: false, message: String(err) }, 500);
+    }
+});
+
+// 图片列表 API - 支持文件夹筛选
+app.get('/api/images', async (c) => {
+    if (!isLoggedIn(c)) return c.json({ success: false, message: 'Unauthorized' }, 401);
+
+    const folder = c.req.query('folder');
+    const prefix = folder && folder !== '默认' ? folder + '/' : '';
+
+    try {
+        const list = await c.env.MY_BUCKET.list({ limit: 100, prefix });
         const origin = new URL(c.req.url).origin;
-        const images = list.objects.map((obj) => ({
-            key: obj.key,
-            size: obj.size,
-            uploaded: obj.uploaded.toISOString(),
-            url: `${origin}/i/${obj.key}`,
-            thumb: `${origin}/thumb/${obj.key}`,
-        }));
+
+        const images = list.objects
+            .filter((obj) => {
+                // 如果是默认文件夹，只显示根目录的文件
+                if (!folder || folder === '默认') {
+                    return !obj.key.includes('/');
+                }
+                return true;
+            })
+            .map((obj) => ({
+                key: obj.key,
+                name: obj.key.includes('/') ? obj.key.split('/').pop() : obj.key,
+                size: obj.size,
+                uploaded: obj.uploaded.toISOString(),
+                url: `${origin}/i/${obj.key}`,
+                thumb: `${origin}/thumb/${obj.key}`,
+            }));
+
         return c.json({ success: true, images });
     } catch (err) {
         return c.json({ success: false, message: String(err) }, 500);
     }
 });
 
-// 缩略图 - 公开访问
-app.get('/thumb/:key', async (c) => {
+// 缩略图
+app.get('/thumb/:key{.+}', async (c) => {
     const object = await c.env.MY_BUCKET.get(c.req.param('key'));
     if (!object) return c.text('Not Found', 404);
 
@@ -91,19 +124,25 @@ app.get('/thumb/:key', async (c) => {
     return new Response(object.body, { headers });
 });
 
-// 图片上传 - 需要登录
+// 图片上传 - 支持文件夹
 app.post('/upload', async (c) => {
     if (!isLoggedIn(c)) return c.json({ success: false, message: 'Unauthorized' }, 401);
 
     const body = await c.req.parseBody();
     const file = body['file'];
+    const folder = body['folder'] as string;
 
     if (!file || !(file instanceof File)) {
         return c.json({ success: false, message: 'No file' }, 400);
     }
 
     const ext = file.name.split('.').pop() || 'png';
-    const filename = `${crypto.randomUUID()}.${ext}`;
+    let filename = `${crypto.randomUUID()}.${ext}`;
+
+    // 如果有文件夹且不是默认，添加前缀
+    if (folder && folder !== '默认') {
+        filename = `${folder}/${filename}`;
+    }
 
     try {
         await c.env.MY_BUCKET.put(filename, await file.arrayBuffer(), {
@@ -117,8 +156,8 @@ app.post('/upload', async (c) => {
     }
 });
 
-// 删除图片 - 需要登录
-app.delete('/api/images/:key', async (c) => {
+// 删除图片
+app.delete('/api/images/:key{.+}', async (c) => {
     if (!isLoggedIn(c)) return c.json({ success: false, message: 'Unauthorized' }, 401);
 
     try {
@@ -129,8 +168,8 @@ app.delete('/api/images/:key', async (c) => {
     }
 });
 
-// 图片访问 - 公开
-app.get('/i/:key', async (c) => {
+// 图片访问
+app.get('/i/:key{.+}', async (c) => {
     const object = await c.env.MY_BUCKET.get(c.req.param('key'));
     if (!object) return c.text('Not Found', 404);
 

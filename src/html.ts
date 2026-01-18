@@ -73,11 +73,9 @@ export const loginPage = `
             const fd = new FormData(e.target);
             const btn = e.target.querySelector('button');
             const error = document.getElementById('error');
-            
             btn.disabled = true;
             btn.textContent = '登录中...';
             error.style.display = 'none';
-            
             try {
                 const res = await fetch('/api/login', { method: 'POST', body: fd });
                 const data = await res.json();
@@ -116,46 +114,86 @@ export const htmlContent = `
         }
         .container { max-width: 960px; margin: 0 auto; padding: 40px 20px; }
         
-        header { margin-bottom: 32px; display: flex; justify-content: space-between; align-items: center; }
+        header { margin-bottom: 24px; display: flex; justify-content: space-between; align-items: center; }
         header h1 { font-size: 24px; font-weight: 600; color: #111; }
         .logout-btn {
-            background: none;
-            border: 1px solid #ddd;
-            padding: 6px 12px;
-            border-radius: 4px;
-            font-size: 12px;
-            color: #666;
-            cursor: pointer;
-        }
-        .logout-btn:hover { border-color: #ff4d4f; color: #ff4d4f; }
-
-        .upload-box {
-            background: #fff;
-            border: 1px solid #e5e5e5;
-            border-radius: 8px;
-            padding: 48px 24px;
-            text-align: center;
-            cursor: pointer;
-            transition: border-color 0.2s;
-            margin-bottom: 32px;
-        }
-        .upload-box:hover, .upload-box.active { border-color: #0070f3; }
-        .upload-box svg { width: 40px; height: 40px; color: #999; margin-bottom: 12px; }
-        .upload-box:hover svg { color: #0070f3; }
-        .upload-box p { color: #666; font-size: 14px; }
-        .upload-box .hint { color: #999; font-size: 12px; margin-top: 8px; }
-
-        .section-title {
-            font-size: 16px; font-weight: 600; color: #111;
-            margin-bottom: 16px;
-            display: flex; align-items: center; justify-content: space-between;
-        }
-        .section-title button {
             background: none; border: 1px solid #ddd;
             padding: 6px 12px; border-radius: 4px;
             font-size: 12px; color: #666; cursor: pointer;
         }
-        .section-title button:hover { border-color: #999; color: #333; }
+        .logout-btn:hover { border-color: #ff4d4f; color: #ff4d4f; }
+
+        .upload-section { 
+            background: #fff; 
+            border: 1px solid #e5e5e5; 
+            border-radius: 8px; 
+            padding: 20px; 
+            margin-bottom: 24px; 
+        }
+        .folder-row {
+            display: flex;
+            gap: 8px;
+            margin-bottom: 16px;
+        }
+        .folder-select {
+            flex: 1;
+            padding: 8px 12px;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+            font-size: 14px;
+            outline: none;
+        }
+        .folder-select:focus { border-color: #0070f3; }
+        .new-folder-btn {
+            padding: 8px 16px;
+            background: #f5f5f5;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+            font-size: 13px;
+            cursor: pointer;
+        }
+        .new-folder-btn:hover { background: #eee; }
+
+        .upload-box {
+            border: 1px dashed #ddd;
+            border-radius: 6px;
+            padding: 32px;
+            text-align: center;
+            cursor: pointer;
+            transition: border-color 0.2s;
+        }
+        .upload-box:hover, .upload-box.active { border-color: #0070f3; background: #fafcff; }
+        .upload-box svg { width: 32px; height: 32px; color: #999; margin-bottom: 8px; }
+        .upload-box:hover svg { color: #0070f3; }
+        .upload-box p { color: #666; font-size: 14px; }
+        .upload-box .hint { color: #999; font-size: 12px; margin-top: 4px; }
+
+        .section-header {
+            display: flex; align-items: center; justify-content: space-between;
+            margin-bottom: 16px;
+        }
+        .section-title { font-size: 16px; font-weight: 600; color: #111; }
+        .folder-tabs {
+            display: flex;
+            gap: 8px;
+            flex-wrap: wrap;
+        }
+        .folder-tab {
+            padding: 4px 12px;
+            background: #f5f5f5;
+            border: 1px solid #e5e5e5;
+            border-radius: 4px;
+            font-size: 12px;
+            cursor: pointer;
+        }
+        .folder-tab:hover { background: #eee; }
+        .folder-tab.active { background: #0070f3; color: #fff; border-color: #0070f3; }
+        .refresh-btn {
+            background: none; border: 1px solid #ddd;
+            padding: 4px 12px; border-radius: 4px;
+            font-size: 12px; color: #666; cursor: pointer;
+        }
+        .refresh-btn:hover { border-color: #999; }
 
         .grid {
             display: grid;
@@ -163,48 +201,29 @@ export const htmlContent = `
             gap: 12px;
         }
         .grid-item {
-            position: relative;
-            aspect-ratio: 1;
-            background: #f0f0f0;
-            border-radius: 6px;
-            overflow: hidden;
-            cursor: pointer;
+            position: relative; aspect-ratio: 1;
+            background: #f0f0f0; border-radius: 6px;
+            overflow: hidden; cursor: pointer;
         }
         .grid-item::before {
-            content: '';
-            position: absolute;
-            inset: 0;
+            content: ''; position: absolute; inset: 0;
             background: linear-gradient(90deg, #f0f0f0 25%, #e0e0e0 50%, #f0f0f0 75%);
             background-size: 200% 100%;
             animation: shimmer 1.5s infinite;
         }
         .grid-item.loaded::before { display: none; }
-        @keyframes shimmer {
-            0% { background-position: 200% 0; }
-            100% { background-position: -200% 0; }
-        }
-        .grid-item img {
-            width: 100%; height: 100%;
-            object-fit: cover;
-            opacity: 0;
-            transition: opacity 0.3s ease;
-        }
+        @keyframes shimmer { 0% { background-position: 200% 0; } 100% { background-position: -200% 0; } }
+        .grid-item img { width: 100%; height: 100%; object-fit: cover; opacity: 0; transition: opacity 0.3s; }
         .grid-item.loaded img { opacity: 1; }
         .grid-item .actions {
-            position: absolute;
-            bottom: 0; left: 0; right: 0;
+            position: absolute; bottom: 0; left: 0; right: 0;
             padding: 8px;
             background: linear-gradient(transparent, rgba(0,0,0,0.6));
             display: flex; gap: 6px;
-            opacity: 0;
-            transition: opacity 0.2s;
+            opacity: 0; transition: opacity 0.2s;
         }
         .grid-item:hover .actions { opacity: 1; }
-        .actions button {
-            flex: 1; padding: 6px;
-            border: none; border-radius: 4px;
-            font-size: 11px; cursor: pointer;
-        }
+        .actions button { flex: 1; padding: 6px; border: none; border-radius: 4px; font-size: 11px; cursor: pointer; }
         .btn-copy { background: #fff; color: #333; }
         .btn-del { background: #ff4d4f; color: #fff; }
 
@@ -212,27 +231,22 @@ export const htmlContent = `
         .loading { text-align: center; padding: 32px; color: #999; }
 
         .toast {
-            position: fixed; bottom: 24px; left: 50%;
-            transform: translateX(-50%);
-            background: #333; color: #fff;
-            padding: 12px 20px; border-radius: 6px;
-            font-size: 14px; display: none; z-index: 100;
+            position: fixed; bottom: 24px; left: 50%; transform: translateX(-50%);
+            background: #333; color: #fff; padding: 12px 20px;
+            border-radius: 6px; font-size: 14px; display: none; z-index: 100;
         }
         .toast.show { display: block; }
 
         .modal {
-            position: fixed; inset: 0;
-            background: rgba(0,0,0,0.85);
-            display: none; align-items: center; justify-content: center;
-            z-index: 200;
+            position: fixed; inset: 0; background: rgba(0,0,0,0.85);
+            display: none; align-items: center; justify-content: center; z-index: 200;
         }
         .modal.show { display: flex; }
         .modal img { max-width: 90%; max-height: 90%; border-radius: 4px; }
         .modal-close {
             position: absolute; top: 16px; right: 16px;
-            width: 36px; height: 36px;
-            background: #fff; border: none; border-radius: 50%;
-            font-size: 20px; cursor: pointer;
+            width: 36px; height: 36px; background: #fff;
+            border: none; border-radius: 50%; font-size: 20px; cursor: pointer;
         }
     </style>
 </head>
@@ -243,18 +257,26 @@ export const htmlContent = `
             <button class="logout-btn" id="logout">退出登录</button>
         </header>
 
-        <div class="upload-box" id="upload">
-            <svg fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M12 4v16m8-8H4"/>
-            </svg>
-            <p>点击上传或拖拽图片到这里</p>
-            <p class="hint">支持粘贴截图 · 最大 10MB</p>
-            <input type="file" id="file" accept="image/*" multiple hidden>
+        <div class="upload-section">
+            <div class="folder-row">
+                <select class="folder-select" id="upload-folder">
+                    <option value="默认">默认</option>
+                </select>
+                <button class="new-folder-btn" id="new-folder">+ 新建文件夹</button>
+            </div>
+            <div class="upload-box" id="upload">
+                <svg fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M12 4v16m8-8H4"/>
+                </svg>
+                <p>点击上传或拖拽图片</p>
+                <p class="hint">支持粘贴截图</p>
+                <input type="file" id="file" accept="image/*" multiple hidden>
+            </div>
         </div>
 
-        <div class="section-title">
-            <span>已上传</span>
-            <button id="refresh">刷新</button>
+        <div class="section-header">
+            <div class="folder-tabs" id="folder-tabs"></div>
+            <button class="refresh-btn" id="refresh">刷新</button>
         </div>
         <div id="gallery"></div>
     </div>
@@ -269,6 +291,9 @@ export const htmlContent = `
         const $ = id => document.getElementById(id);
         const upload = $('upload'), file = $('file'), gallery = $('gallery');
         const toast = $('toast'), modal = $('modal'), preview = $('preview');
+        const uploadFolder = $('upload-folder');
+        const folderTabs = $('folder-tabs');
+        let currentFolder = '默认';
 
         function showToast(msg) {
             toast.textContent = msg;
@@ -280,6 +305,45 @@ export const htmlContent = `
             await fetch('/api/logout', { method: 'POST' });
             location.href = '/login';
         };
+
+        // 新建文件夹
+        $('new-folder').onclick = () => {
+            const name = prompt('请输入文件夹名称：');
+            if (name && name.trim()) {
+                const opt = document.createElement('option');
+                opt.value = name.trim();
+                opt.textContent = name.trim();
+                uploadFolder.appendChild(opt);
+                uploadFolder.value = name.trim();
+                loadFolders();
+            }
+        };
+
+        // 加载文件夹列表
+        async function loadFolders() {
+            try {
+                const res = await fetch('/api/folders');
+                const data = await res.json();
+                if (data.folders) {
+                    uploadFolder.innerHTML = data.folders.map(f => 
+                        '<option value="' + f + '">' + f + '</option>'
+                    ).join('');
+                    
+                    folderTabs.innerHTML = data.folders.map(f => 
+                        '<button class="folder-tab' + (f === currentFolder ? ' active' : '') + '" data-folder="' + f + '">' + f + '</button>'
+                    ).join('');
+                    
+                    folderTabs.querySelectorAll('.folder-tab').forEach(btn => {
+                        btn.onclick = () => {
+                            currentFolder = btn.dataset.folder;
+                            folderTabs.querySelectorAll('.folder-tab').forEach(b => b.classList.remove('active'));
+                            btn.classList.add('active');
+                            loadGallery();
+                        };
+                    });
+                }
+            } catch {}
+        }
 
         upload.onclick = () => file.click();
         upload.ondragover = e => { e.preventDefault(); upload.classList.add('active'); };
@@ -300,9 +364,11 @@ export const htmlContent = `
         };
 
         async function handleFiles(files) {
+            const folder = uploadFolder.value;
             for (let f of files) {
                 const fd = new FormData();
                 fd.append('file', f);
+                fd.append('folder', folder);
                 try {
                     const res = await fetch('/upload', { method: 'POST', body: fd });
                     if (res.status === 401) { location.href = '/login'; return; }
@@ -313,13 +379,15 @@ export const htmlContent = `
                     }
                 } catch { showToast('上传失败'); }
             }
+            currentFolder = folder;
+            loadFolders();
             loadGallery();
         }
 
         async function loadGallery() {
             gallery.innerHTML = '<div class="loading">加载中...</div>';
             try {
-                const res = await fetch('/api/images');
+                const res = await fetch('/api/images?folder=' + encodeURIComponent(currentFolder));
                 if (res.status === 401) { location.href = '/login'; return; }
                 const data = await res.json();
                 if (data.images && data.images.length) {
@@ -351,8 +419,7 @@ export const htmlContent = `
                         actionsDiv.querySelector('.btn-del').onclick = async e => {
                             e.stopPropagation();
                             if (!confirm('确定删除？')) return;
-                            const res = await fetch('/api/images/' + img.key, { method: 'DELETE' });
-                            if (res.status === 401) { location.href = '/login'; return; }
+                            await fetch('/api/images/' + encodeURIComponent(img.key), { method: 'DELETE' });
                             showToast('已删除');
                             loadGallery();
                         };
@@ -364,10 +431,11 @@ export const htmlContent = `
             } catch { gallery.innerHTML = '<div class="empty">加载失败</div>'; }
         }
 
-        $('refresh').onclick = loadGallery;
+        $('refresh').onclick = () => { loadFolders(); loadGallery(); };
         $('close').onclick = () => modal.classList.remove('show');
         modal.onclick = e => { if (e.target === modal) modal.classList.remove('show'); };
 
+        loadFolders();
         loadGallery();
     </script>
 </body>
