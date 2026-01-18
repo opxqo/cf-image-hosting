@@ -4,417 +4,291 @@ export const htmlContent = `
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Cloud Pixel - 云端图床</title>
-    <link rel="icon" type="image/svg+xml" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>☁️</text></svg>">
+    <title>图床</title>
     <style>
-        :root {
-            --primary: #6366f1;
-            --primary-hover: #4f46e5;
-            --bg: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-            --card-bg: rgba(255, 255, 255, 0.95);
-            --text-main: #1e293b;
-            --text-sub: #64748b;
-            --border: #e2e8f0;
-            --danger: #ef4444;
-        }
-
         * { box-sizing: border-box; margin: 0; padding: 0; }
-
         body {
-            font-family: 'Inter', -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
-            background: var(--bg);
-            min-height: 100vh;
-            color: var(--text-main);
-            padding: 2rem;
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+            background: #fafafa;
+            color: #333;
+            line-height: 1.5;
         }
-
-        .app {
-            max-width: 1200px;
-            margin: 0 auto;
-        }
-
+        .container { max-width: 960px; margin: 0 auto; padding: 40px 20px; }
+        
         /* Header */
-        .header {
-            text-align: center;
-            margin-bottom: 2rem;
-            color: white;
-        }
-        .header h1 {
-            font-size: 2.5rem;
-            font-weight: 800;
-            margin-bottom: 0.5rem;
-            text-shadow: 0 2px 10px rgba(0,0,0,0.2);
-        }
-        .header p {
-            opacity: 0.9;
-            font-size: 1.1rem;
-        }
+        header { margin-bottom: 32px; }
+        header h1 { font-size: 24px; font-weight: 600; color: #111; }
+        header p { color: #666; font-size: 14px; margin-top: 4px; }
 
-        /* Upload Card */
-        .upload-card {
-            background: var(--card-bg);
-            border-radius: 24px;
-            padding: 2rem;
-            box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.25);
-            margin-bottom: 2rem;
-            backdrop-filter: blur(10px);
-        }
-
-        .upload-area {
-            border: 2px dashed #cbd5e1;
-            border-radius: 16px;
-            padding: 3rem;
-            text-align: center;
-            cursor: pointer;
-            transition: all 0.3s ease;
-            background: #f8fafc;
-        }
-        .upload-area:hover, .upload-area.dragover {
-            border-color: var(--primary);
-            background: #f0f4ff;
-            transform: translateY(-2px);
-        }
-        .upload-icon {
-            width: 64px;
-            height: 64px;
-            margin: 0 auto 1rem;
-            color: #94a3b8;
-            transition: all 0.3s;
-        }
-        .upload-area:hover .upload-icon { color: var(--primary); transform: scale(1.1); }
-        .upload-text { font-size: 1.1rem; font-weight: 600; color: var(--text-main); margin-bottom: 0.5rem; }
-        .upload-hint { font-size: 0.85rem; color: var(--text-sub); }
-
-        /* Result Toast */
-        .toast {
-            display: none;
-            position: fixed;
-            bottom: 2rem;
-            left: 50%;
-            transform: translateX(-50%);
-            background: #10b981;
-            color: white;
-            padding: 1rem 1.5rem;
-            border-radius: 12px;
-            box-shadow: 0 10px 25px rgba(0,0,0,0.2);
-            z-index: 1000;
-            animation: slideUp 0.3s ease;
-        }
-        .toast.error { background: var(--danger); }
-        @keyframes slideUp {
-            from { opacity: 0; transform: translateX(-50%) translateY(20px); }
-            to { opacity: 1; transform: translateX(-50%) translateY(0); }
-        }
-
-        /* Gallery Section */
-        .gallery-section {
-            background: var(--card-bg);
-            border-radius: 24px;
-            padding: 2rem;
-            box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.25);
-            backdrop-filter: blur(10px);
-        }
-        .gallery-header {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            margin-bottom: 1.5rem;
-        }
-        .gallery-title {
-            font-size: 1.3rem;
-            font-weight: 700;
-            color: var(--text-main);
-        }
-        .refresh-btn {
-            background: none;
-            border: 1px solid var(--border);
-            padding: 8px 16px;
+        /* Upload */
+        .upload-box {
+            background: #fff;
+            border: 1px solid #e5e5e5;
             border-radius: 8px;
+            padding: 48px 24px;
+            text-align: center;
             cursor: pointer;
-            font-size: 0.85rem;
-            color: var(--text-sub);
-            transition: all 0.2s;
+            transition: border-color 0.2s;
+            margin-bottom: 32px;
         }
-        .refresh-btn:hover { border-color: var(--primary); color: var(--primary); }
+        .upload-box:hover, .upload-box.active {
+            border-color: #0070f3;
+        }
+        .upload-box svg {
+            width: 40px;
+            height: 40px;
+            color: #999;
+            margin-bottom: 12px;
+        }
+        .upload-box:hover svg { color: #0070f3; }
+        .upload-box p { color: #666; font-size: 14px; }
+        .upload-box .hint { color: #999; font-size: 12px; margin-top: 8px; }
 
-        /* Image Grid */
-        .image-grid {
-            display: grid;
-            grid-template-columns: repeat(auto-fill, minmax(180px, 1fr));
-            gap: 1rem;
+        /* Gallery */
+        .section-title {
+            font-size: 16px;
+            font-weight: 600;
+            color: #111;
+            margin-bottom: 16px;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
         }
-        .image-item {
+        .section-title button {
+            background: none;
+            border: 1px solid #ddd;
+            padding: 6px 12px;
+            border-radius: 4px;
+            font-size: 12px;
+            color: #666;
+            cursor: pointer;
+        }
+        .section-title button:hover { border-color: #999; color: #333; }
+
+        .grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(140px, 1fr));
+            gap: 12px;
+        }
+        .grid-item {
             position: relative;
             aspect-ratio: 1;
-            border-radius: 12px;
+            background: #f5f5f5;
+            border-radius: 6px;
             overflow: hidden;
-            background: #f1f5f9;
             cursor: pointer;
-            transition: transform 0.2s, box-shadow 0.2s;
         }
-        .image-item:hover {
-            transform: translateY(-4px);
-            box-shadow: 0 12px 24px rgba(0,0,0,0.15);
-        }
-        .image-item img {
+        .grid-item img {
             width: 100%;
             height: 100%;
             object-fit: cover;
-            transition: transform 0.3s;
+            transition: opacity 0.2s;
         }
-        .image-item:hover img { transform: scale(1.05); }
-
-        .image-overlay {
+        .grid-item:hover img { opacity: 0.9; }
+        .grid-item .actions {
             position: absolute;
-            inset: 0;
-            background: linear-gradient(to top, rgba(0,0,0,0.7), transparent);
+            bottom: 0;
+            left: 0;
+            right: 0;
+            padding: 8px;
+            background: linear-gradient(transparent, rgba(0,0,0,0.6));
+            display: flex;
+            gap: 6px;
             opacity: 0;
             transition: opacity 0.2s;
-            display: flex;
-            align-items: flex-end;
-            padding: 0.75rem;
-            gap: 0.5rem;
         }
-        .image-item:hover .image-overlay { opacity: 1; }
-
-        .overlay-btn {
+        .grid-item:hover .actions { opacity: 1; }
+        .actions button {
             flex: 1;
-            padding: 8px;
+            padding: 6px;
             border: none;
-            border-radius: 8px;
-            font-size: 0.75rem;
-            font-weight: 600;
+            border-radius: 4px;
+            font-size: 11px;
             cursor: pointer;
-            transition: all 0.2s;
         }
-        .copy-btn { background: white; color: var(--text-main); }
-        .copy-btn:hover { background: #f1f5f9; }
-        .delete-btn { background: var(--danger); color: white; }
-        .delete-btn:hover { background: #dc2626; }
+        .btn-copy { background: #fff; color: #333; }
+        .btn-del { background: #ff4d4f; color: #fff; }
 
-        .empty-state {
+        /* Empty */
+        .empty {
             text-align: center;
-            padding: 3rem;
-            color: var(--text-sub);
+            padding: 48px;
+            color: #999;
+            font-size: 14px;
         }
-        .empty-state svg { width: 64px; height: 64px; margin-bottom: 1rem; opacity: 0.5; }
+
+        /* Loading */
+        .loading {
+            text-align: center;
+            padding: 32px;
+            color: #999;
+        }
+
+        /* Toast */
+        .toast {
+            position: fixed;
+            bottom: 24px;
+            left: 50%;
+            transform: translateX(-50%);
+            background: #333;
+            color: #fff;
+            padding: 12px 20px;
+            border-radius: 6px;
+            font-size: 14px;
+            display: none;
+            z-index: 100;
+        }
+        .toast.show { display: block; animation: fadeIn 0.2s; }
+        @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
 
         /* Modal */
         .modal {
-            display: none;
             position: fixed;
             inset: 0;
-            background: rgba(0,0,0,0.9);
-            z-index: 1000;
+            background: rgba(0,0,0,0.85);
+            display: none;
             align-items: center;
             justify-content: center;
-            padding: 2rem;
+            z-index: 200;
         }
-        .modal.active { display: flex; }
-        .modal img {
-            max-width: 90%;
-            max-height: 90%;
-            border-radius: 8px;
-            box-shadow: 0 25px 50px rgba(0,0,0,0.5);
-        }
+        .modal.show { display: flex; }
+        .modal img { max-width: 90%; max-height: 90%; border-radius: 4px; }
         .modal-close {
             position: absolute;
-            top: 1rem;
-            right: 1rem;
-            background: white;
+            top: 16px;
+            right: 16px;
+            width: 36px;
+            height: 36px;
+            background: #fff;
             border: none;
-            width: 40px;
-            height: 40px;
             border-radius: 50%;
-            font-size: 1.5rem;
+            font-size: 20px;
             cursor: pointer;
-        }
-
-        /* Loading Spinner */
-        .spinner {
-            width: 24px;
-            height: 24px;
-            border: 3px solid #e2e8f0;
-            border-top-color: var(--primary);
-            border-radius: 50%;
-            animation: spin 0.8s linear infinite;
-            margin: 2rem auto;
-        }
-        @keyframes spin { to { transform: rotate(360deg); } }
-
-        @media (max-width: 640px) {
-            body { padding: 1rem; }
-            .header h1 { font-size: 1.8rem; }
-            .upload-area { padding: 2rem 1rem; }
-            .image-grid { grid-template-columns: repeat(auto-fill, minmax(140px, 1fr)); }
         }
     </style>
 </head>
 <body>
-    <div class="app">
-        <header class="header">
-            <h1>☁️ Cloud Pixel</h1>
-            <p>极速、安全的云端图床</p>
+    <div class="container">
+        <header>
+            <h1>图床</h1>
+            <p>上传图片，获取链接</p>
         </header>
 
-        <div class="upload-card">
-            <div class="upload-area" id="drop-zone">
-                <svg class="upload-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-8l-4-4m0 0L8 8m4-4v12"/>
-                </svg>
-                <div class="upload-text">点击或拖拽图片到这里上传</div>
-                <div class="upload-hint">支持粘贴截图 · JPG/PNG/GIF/WEBP · 最大 10MB</div>
-                <input type="file" id="file-input" accept="image/*" multiple hidden>
-            </div>
+        <div class="upload-box" id="upload">
+            <svg fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M12 4v16m8-8H4"/>
+            </svg>
+            <p>点击上传或拖拽图片到这里</p>
+            <p class="hint">支持粘贴截图 · 最大 10MB</p>
+            <input type="file" id="file" accept="image/*" multiple hidden>
         </div>
 
-        <div class="gallery-section">
-            <div class="gallery-header">
-                <h2 class="gallery-title">📷 图片列表</h2>
-                <button class="refresh-btn" id="refresh-btn">🔄 刷新</button>
-            </div>
-            <div id="gallery-content">
-                <div class="spinner"></div>
-            </div>
+        <div class="section-title">
+            <span>已上传</span>
+            <button id="refresh">刷新</button>
         </div>
+        <div id="gallery"></div>
     </div>
 
     <div class="toast" id="toast"></div>
-
     <div class="modal" id="modal">
-        <button class="modal-close" id="modal-close">×</button>
-        <img id="modal-img" src="" alt="Preview">
+        <button class="modal-close" id="close">×</button>
+        <img id="preview" src="">
     </div>
 
     <script>
-        const dropZone = document.getElementById('drop-zone');
-        const fileInput = document.getElementById('file-input');
-        const galleryContent = document.getElementById('gallery-content');
-        const refreshBtn = document.getElementById('refresh-btn');
-        const toast = document.getElementById('toast');
-        const modal = document.getElementById('modal');
-        const modalImg = document.getElementById('modal-img');
-        const modalClose = document.getElementById('modal-close');
+        const $ = id => document.getElementById(id);
+        const upload = $('upload'), file = $('file'), gallery = $('gallery');
+        const toast = $('toast'), modal = $('modal'), preview = $('preview');
 
-        // Toast
-        function showToast(message, isError = false) {
-            toast.textContent = message;
-            toast.className = 'toast' + (isError ? ' error' : '');
-            toast.style.display = 'block';
-            setTimeout(() => { toast.style.display = 'none'; }, 3000);
+        function showToast(msg) {
+            toast.textContent = msg;
+            toast.classList.add('show');
+            setTimeout(() => toast.classList.remove('show'), 2000);
         }
 
-        // Modal
-        modalClose.addEventListener('click', () => modal.classList.remove('active'));
-        modal.addEventListener('click', (e) => { if (e.target === modal) modal.classList.remove('active'); });
-
-        // Drag & Drop
-        dropZone.addEventListener('click', () => fileInput.click());
-        dropZone.addEventListener('dragover', (e) => { e.preventDefault(); dropZone.classList.add('dragover'); });
-        dropZone.addEventListener('dragleave', () => dropZone.classList.remove('dragover'));
-        dropZone.addEventListener('drop', (e) => {
+        // Upload
+        upload.onclick = () => file.click();
+        upload.ondragover = e => { e.preventDefault(); upload.classList.add('active'); };
+        upload.ondragleave = () => upload.classList.remove('active');
+        upload.ondrop = e => {
             e.preventDefault();
-            dropZone.classList.remove('dragover');
+            upload.classList.remove('active');
             handleFiles(e.dataTransfer.files);
-        });
-        fileInput.addEventListener('change', (e) => handleFiles(e.target.files));
-
-        // Paste
-        document.addEventListener('paste', (e) => {
-            const items = e.clipboardData.items;
-            for (let item of items) {
+        };
+        file.onchange = e => handleFiles(e.target.files);
+        document.onpaste = e => {
+            for (let item of e.clipboardData.items) {
                 if (item.type.startsWith('image/')) {
                     handleFiles([item.getAsFile()]);
                     break;
                 }
             }
-        });
+        };
 
         async function handleFiles(files) {
-            for (let file of files) {
-                await uploadFile(file);
+            for (let f of files) {
+                const fd = new FormData();
+                fd.append('file', f);
+                try {
+                    const res = await fetch('/upload', { method: 'POST', body: fd });
+                    const data = await res.json();
+                    if (data.url) {
+                        await navigator.clipboard.writeText(data.url);
+                        showToast('已上传并复制链接');
+                    }
+                } catch { showToast('上传失败'); }
             }
             loadGallery();
         }
 
-        async function uploadFile(file) {
-            const formData = new FormData();
-            formData.append('file', file);
-
-            try {
-                const res = await fetch('/upload', { method: 'POST', body: formData });
-                if (!res.ok) throw new Error(await res.text());
-                const data = await res.json();
-                if (data.url) {
-                    await navigator.clipboard.writeText(data.url);
-                    showToast('上传成功，链接已复制！');
-                }
-            } catch (err) {
-                showToast('上传失败: ' + err.message, true);
-            }
-        }
-
+        // Gallery
         async function loadGallery() {
-            galleryContent.innerHTML = '<div class="spinner"></div>';
+            gallery.innerHTML = '<div class="loading">加载中...</div>';
             try {
                 const res = await fetch('/api/images');
                 const data = await res.json();
-                if (data.images && data.images.length > 0) {
-                    renderGallery(data.images);
-                } else {
-                    galleryContent.innerHTML = \`
-                        <div class="empty-state">
-                            <svg fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z"/>
-                            </svg>
-                            <p>还没有图片，快来上传吧！</p>
-                        </div>
-                    \`;
-                }
-            } catch (err) {
-                galleryContent.innerHTML = '<p style="text-align:center;color:#ef4444;">加载失败</p>';
-            }
-        }
-
-        function renderGallery(images) {
-            galleryContent.innerHTML = '<div class="image-grid"></div>';
-            const grid = galleryContent.querySelector('.image-grid');
-            images.forEach(img => {
-                const item = document.createElement('div');
-                item.className = 'image-item';
-                item.innerHTML = \`
-                    <img src="\${img.url}" alt="" loading="lazy">
-                    <div class="image-overlay">
-                        <button class="overlay-btn copy-btn" data-url="\${img.url}">复制</button>
-                        <button class="overlay-btn delete-btn" data-key="\${img.key}">删除</button>
-                    </div>
-                \`;
-                item.querySelector('img').addEventListener('click', () => {
-                    modalImg.src = img.url;
-                    modal.classList.add('active');
-                });
-                item.querySelector('.copy-btn').addEventListener('click', async (e) => {
-                    e.stopPropagation();
-                    await navigator.clipboard.writeText(img.url);
-                    showToast('链接已复制！');
-                });
-                item.querySelector('.delete-btn').addEventListener('click', async (e) => {
-                    e.stopPropagation();
-                    if (confirm('确定删除这张图片？')) {
-                        try {
+                if (data.images?.length) {
+                    gallery.innerHTML = '<div class="grid"></div>';
+                    const grid = gallery.querySelector('.grid');
+                    data.images.forEach(img => {
+                        const el = document.createElement('div');
+                        el.className = 'grid-item';
+                        el.innerHTML = \`
+                            <img src="\${img.thumb}" loading="lazy" data-full="\${img.url}">
+                            <div class="actions">
+                                <button class="btn-copy">复制</button>
+                                <button class="btn-del">删除</button>
+                            </div>
+                        \`;
+                        el.querySelector('img').onclick = () => {
+                            preview.src = img.url;
+                            modal.classList.add('show');
+                        };
+                        el.querySelector('.btn-copy').onclick = async e => {
+                            e.stopPropagation();
+                            await navigator.clipboard.writeText(img.url);
+                            showToast('已复制');
+                        };
+                        el.querySelector('.btn-del').onclick = async e => {
+                            e.stopPropagation();
+                            if (!confirm('确定删除？')) return;
                             await fetch('/api/images/' + img.key, { method: 'DELETE' });
-                            showToast('删除成功');
+                            showToast('已删除');
                             loadGallery();
-                        } catch (err) {
-                            showToast('删除失败', true);
-                        }
-                    }
-                });
-                grid.appendChild(item);
-            });
+                        };
+                        grid.appendChild(el);
+                    });
+                } else {
+                    gallery.innerHTML = '<div class="empty">暂无图片</div>';
+                }
+            } catch { gallery.innerHTML = '<div class="empty">加载失败</div>'; }
         }
 
-        refreshBtn.addEventListener('click', loadGallery);
+        $('refresh').onclick = loadGallery;
+        $('close').onclick = () => modal.classList.remove('show');
+        modal.onclick = e => { if (e.target === modal) modal.classList.remove('show'); };
+
         loadGallery();
     </script>
 </body>

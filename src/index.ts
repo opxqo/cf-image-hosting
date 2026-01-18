@@ -8,20 +8,20 @@ type Bindings = {
 
 const app = new Hono<{ Bindings: Bindings }>();
 
-// 首页：显示上传界面
-app.get('/', (c) => {
-    return c.html(htmlContent);
-});
+// 首页
+app.get('/', (c) => c.html(htmlContent));
 
 // 图片列表 API
 app.get('/api/images', async (c) => {
     try {
         const list = await c.env.MY_BUCKET.list({ limit: 100 });
+        const origin = new URL(c.req.url).origin;
         const images = list.objects.map((obj) => ({
             key: obj.key,
             size: obj.size,
             uploaded: obj.uploaded.toISOString(),
-            url: new URL(c.req.url).origin + '/' + obj.key,
+            url: `${origin}/${obj.key}`,
+            thumb: `${origin}/thumb/${obj.key}`,
         }));
         return c.json({ success: true, images });
     } catch (err) {
@@ -29,9 +29,44 @@ app.get('/api/images', async (c) => {
     }
 });
 
+// 缩略图 API (使用 Cloudflare Image Resizing)
+app.get('/thumb/:key', async (c) => {
+    const key = c.req.param('key');
+    const object = await c.env.MY_BUCKET.get(key);
+
+    if (!object) return c.text('Not Found', 404);
+
+    const headers = new Headers();
+    object.writeHttpMetadata(headers);
+    headers.set('Cache-Control', 'public, max-age=31536000');
+
+    // 尝试使用 Cloudflare Image Resizing
+    // 如果没有开启此功能，则返回原图
+    const originalUrl = new URL(c.req.url).origin + '/' + key;
+
+    try {
+        const resized = await fetch(originalUrl, {
+            cf: {
+                image: {
+                    width: 300,
+                    height: 300,
+                    fit: 'cover',
+                    quality: 80,
+                },
+            },
+        });
+        if (resized.ok) {
+            return new Response(resized.body, { headers });
+        }
+    } catch {
+        // Image Resizing 不可用，返回原图
+    }
+
+    return new Response(object.body, { headers });
+});
+
 // 图片上传 API
 app.post('/upload', async (c) => {
-    // 1. 鉴权
     const authToken = c.env.AUTH_TOKEN;
     if (authToken) {
         const authHeader = c.req.header('Authorization');
@@ -40,7 +75,6 @@ app.post('/upload', async (c) => {
         }
     }
 
-    // 2. 解析文件
     const body = await c.req.parseBody();
     const file = body['file'];
 
@@ -48,29 +82,20 @@ app.post('/upload', async (c) => {
         return c.json({ success: false, message: 'No file uploaded' }, 400);
     }
 
-    // 3. 生成文件名 (UUID + 扩展名)
     const ext = file.name.split('.').pop() || 'png';
     const filename = `${crypto.randomUUID()}.${ext}`;
 
-    // 4. 写入 R2
     try {
         await c.env.MY_BUCKET.put(filename, await file.arrayBuffer(), {
-            httpMetadata: {
-                contentType: file.type,
-            },
+            httpMetadata: { contentType: file.type },
         });
 
-        // 5. 生成 URL
         const url = new URL(c.req.url);
         const fileUrl = `${url.origin}/${filename}`;
 
-        return c.json({
-            success: true,
-            url: fileUrl,
-            imgUrl: fileUrl, // 兼容 PicGo
-        });
+        return c.json({ success: true, url: fileUrl, imgUrl: fileUrl });
     } catch (err) {
-        return c.json({ success: false, message: 'Failed to upload to R2', error: String(err) }, 500);
+        return c.json({ success: false, message: String(err) }, 500);
     }
 });
 
@@ -84,9 +109,8 @@ app.delete('/api/images/:key', async (c) => {
         }
     }
 
-    const key = c.req.param('key');
     try {
-        await c.env.MY_BUCKET.delete(key);
+        await c.env.MY_BUCKET.delete(c.req.param('key'));
         return c.json({ success: true });
     } catch (err) {
         return c.json({ success: false, message: String(err) }, 500);
@@ -95,23 +119,15 @@ app.delete('/api/images/:key', async (c) => {
 
 // 图片获取 API
 app.get('/:key', async (c) => {
-    const key = c.req.param('key');
-
-    // 尝试从 R2 获取
-    const object = await c.env.MY_BUCKET.get(key);
-
-    if (!object) {
-        return c.text('File Not Found', 404);
-    }
+    const object = await c.env.MY_BUCKET.get(c.req.param('key'));
+    if (!object) return c.text('Not Found', 404);
 
     const headers = new Headers();
     object.writeHttpMetadata(headers);
     headers.set('etag', object.httpEtag);
-    headers.set('Cache-Control', 'public, max-age=31536000'); // 长缓存
+    headers.set('Cache-Control', 'public, max-age=31536000');
 
-    return new Response(object.body, {
-        headers: headers,
-    });
+    return new Response(object.body, { headers });
 });
 
 export default app;
