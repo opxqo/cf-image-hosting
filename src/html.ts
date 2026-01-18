@@ -15,12 +15,10 @@ export const htmlContent = `
         }
         .container { max-width: 960px; margin: 0 auto; padding: 40px 20px; }
         
-        /* Header */
         header { margin-bottom: 32px; }
         header h1 { font-size: 24px; font-weight: 600; color: #111; }
         header p { color: #666; font-size: 14px; margin-top: 4px; }
 
-        /* Upload */
         .upload-box {
             background: #fff;
             border: 1px solid #e5e5e5;
@@ -31,37 +29,21 @@ export const htmlContent = `
             transition: border-color 0.2s;
             margin-bottom: 32px;
         }
-        .upload-box:hover, .upload-box.active {
-            border-color: #0070f3;
-        }
-        .upload-box svg {
-            width: 40px;
-            height: 40px;
-            color: #999;
-            margin-bottom: 12px;
-        }
+        .upload-box:hover, .upload-box.active { border-color: #0070f3; }
+        .upload-box svg { width: 40px; height: 40px; color: #999; margin-bottom: 12px; }
         .upload-box:hover svg { color: #0070f3; }
         .upload-box p { color: #666; font-size: 14px; }
         .upload-box .hint { color: #999; font-size: 12px; margin-top: 8px; }
 
-        /* Gallery */
         .section-title {
-            font-size: 16px;
-            font-weight: 600;
-            color: #111;
+            font-size: 16px; font-weight: 600; color: #111;
             margin-bottom: 16px;
-            display: flex;
-            align-items: center;
-            justify-content: space-between;
+            display: flex; align-items: center; justify-content: space-between;
         }
         .section-title button {
-            background: none;
-            border: 1px solid #ddd;
-            padding: 6px 12px;
-            border-radius: 4px;
-            font-size: 12px;
-            color: #666;
-            cursor: pointer;
+            background: none; border: 1px solid #ddd;
+            padding: 6px 12px; border-radius: 4px;
+            font-size: 12px; color: #666; cursor: pointer;
         }
         .section-title button:hover { border-color: #999; color: #333; }
 
@@ -73,97 +55,81 @@ export const htmlContent = `
         .grid-item {
             position: relative;
             aspect-ratio: 1;
-            background: #f5f5f5;
+            background: #f0f0f0;
             border-radius: 6px;
             overflow: hidden;
             cursor: pointer;
         }
-        .grid-item img {
-            width: 100%;
-            height: 100%;
-            object-fit: cover;
-            transition: opacity 0.2s;
+        
+        /* Skeleton loading animation */
+        .grid-item::before {
+            content: '';
+            position: absolute;
+            inset: 0;
+            background: linear-gradient(90deg, #f0f0f0 25%, #e0e0e0 50%, #f0f0f0 75%);
+            background-size: 200% 100%;
+            animation: shimmer 1.5s infinite;
         }
-        .grid-item:hover img { opacity: 0.9; }
+        .grid-item.loaded::before { display: none; }
+        
+        @keyframes shimmer {
+            0% { background-position: 200% 0; }
+            100% { background-position: -200% 0; }
+        }
+        
+        .grid-item img {
+            width: 100%; height: 100%;
+            object-fit: cover;
+            opacity: 0;
+            transition: opacity 0.3s ease;
+        }
+        .grid-item.loaded img { opacity: 1; }
+        
+        .grid-item:hover img { transform: scale(1.02); }
         .grid-item .actions {
             position: absolute;
-            bottom: 0;
-            left: 0;
-            right: 0;
+            bottom: 0; left: 0; right: 0;
             padding: 8px;
             background: linear-gradient(transparent, rgba(0,0,0,0.6));
-            display: flex;
-            gap: 6px;
+            display: flex; gap: 6px;
             opacity: 0;
             transition: opacity 0.2s;
         }
         .grid-item:hover .actions { opacity: 1; }
         .actions button {
-            flex: 1;
-            padding: 6px;
-            border: none;
-            border-radius: 4px;
-            font-size: 11px;
-            cursor: pointer;
+            flex: 1; padding: 6px;
+            border: none; border-radius: 4px;
+            font-size: 11px; cursor: pointer;
         }
         .btn-copy { background: #fff; color: #333; }
         .btn-del { background: #ff4d4f; color: #fff; }
 
-        /* Empty */
-        .empty {
-            text-align: center;
-            padding: 48px;
-            color: #999;
-            font-size: 14px;
-        }
+        .empty { text-align: center; padding: 48px; color: #999; font-size: 14px; }
+        .loading { text-align: center; padding: 32px; color: #999; }
 
-        /* Loading */
-        .loading {
-            text-align: center;
-            padding: 32px;
-            color: #999;
-        }
-
-        /* Toast */
         .toast {
-            position: fixed;
-            bottom: 24px;
-            left: 50%;
+            position: fixed; bottom: 24px; left: 50%;
             transform: translateX(-50%);
-            background: #333;
-            color: #fff;
-            padding: 12px 20px;
-            border-radius: 6px;
-            font-size: 14px;
-            display: none;
-            z-index: 100;
+            background: #333; color: #fff;
+            padding: 12px 20px; border-radius: 6px;
+            font-size: 14px; display: none; z-index: 100;
         }
         .toast.show { display: block; animation: fadeIn 0.2s; }
         @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
 
-        /* Modal */
         .modal {
-            position: fixed;
-            inset: 0;
+            position: fixed; inset: 0;
             background: rgba(0,0,0,0.85);
-            display: none;
-            align-items: center;
-            justify-content: center;
+            display: none; align-items: center; justify-content: center;
             z-index: 200;
         }
         .modal.show { display: flex; }
         .modal img { max-width: 90%; max-height: 90%; border-radius: 4px; }
         .modal-close {
-            position: absolute;
-            top: 16px;
-            right: 16px;
-            width: 36px;
-            height: 36px;
-            background: #fff;
-            border: none;
-            border-radius: 50%;
-            font-size: 20px;
-            cursor: pointer;
+            position: absolute; top: 16px; right: 16px;
+            width: 36px; height: 36px;
+            background: #fff; border: none; border-radius: 50%;
+            font-size: 20px; cursor: pointer;
         }
     </style>
 </head>
@@ -207,7 +173,6 @@ export const htmlContent = `
             setTimeout(() => toast.classList.remove('show'), 2000);
         }
 
-        // Upload
         upload.onclick = () => file.click();
         upload.ondragover = e => { e.preventDefault(); upload.classList.add('active'); };
         upload.ondragleave = () => upload.classList.remove('active');
@@ -242,7 +207,6 @@ export const htmlContent = `
             loadGallery();
         }
 
-        // Gallery
         async function loadGallery() {
             gallery.innerHTML = '<div class="loading">加载中...</div>';
             try {
@@ -255,13 +219,26 @@ export const htmlContent = `
                         const el = document.createElement('div');
                         el.className = 'grid-item';
                         el.innerHTML = \`
-                            <img src="\${img.thumb}" loading="lazy" data-full="\${img.url}">
+                            <img data-src="\${img.thumb}" data-full="\${img.url}">
                             <div class="actions">
                                 <button class="btn-copy">复制</button>
                                 <button class="btn-del">删除</button>
                             </div>
                         \`;
-                        el.querySelector('img').onclick = () => {
+                        
+                        const imgEl = el.querySelector('img');
+                        const image = new Image();
+                        image.onload = () => {
+                            imgEl.src = img.thumb;
+                            el.classList.add('loaded');
+                        };
+                        image.onerror = () => {
+                            imgEl.src = img.url;
+                            el.classList.add('loaded');
+                        };
+                        image.src = img.thumb;
+                        
+                        imgEl.onclick = () => {
                             preview.src = img.url;
                             modal.classList.add('show');
                         };
