@@ -1,4 +1,105 @@
-export const htmlContent = `
+export const loginPage = `
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>登录 - 图床</title>
+    <style>
+        * { box-sizing: border-box; margin: 0; padding: 0; }
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+            background: #fafafa;
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+        .login-box {
+            background: #fff;
+            border: 1px solid #e5e5e5;
+            border-radius: 8px;
+            padding: 32px;
+            width: 100%;
+            max-width: 360px;
+        }
+        .login-box h1 { font-size: 20px; font-weight: 600; margin-bottom: 24px; text-align: center; }
+        .form-group { margin-bottom: 16px; }
+        .form-group label { display: block; font-size: 14px; color: #333; margin-bottom: 6px; }
+        .form-group input {
+            width: 100%;
+            padding: 10px 12px;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+            font-size: 14px;
+            outline: none;
+        }
+        .form-group input:focus { border-color: #0070f3; }
+        .btn {
+            width: 100%;
+            padding: 12px;
+            background: #0070f3;
+            color: #fff;
+            border: none;
+            border-radius: 4px;
+            font-size: 14px;
+            font-weight: 500;
+            cursor: pointer;
+        }
+        .btn:hover { background: #005bb5; }
+        .btn:disabled { background: #ccc; cursor: not-allowed; }
+        .error { color: #ff4d4f; font-size: 13px; margin-top: 12px; text-align: center; display: none; }
+    </style>
+</head>
+<body>
+    <div class="login-box">
+        <h1>图床登录</h1>
+        <form id="form">
+            <div class="form-group">
+                <label>用户名</label>
+                <input type="text" name="username" required autofocus>
+            </div>
+            <div class="form-group">
+                <label>密码</label>
+                <input type="password" name="password" required>
+            </div>
+            <button type="submit" class="btn">登录</button>
+            <div class="error" id="error"></div>
+        </form>
+    </div>
+    <script>
+        document.getElementById('form').onsubmit = async (e) => {
+            e.preventDefault();
+            const fd = new FormData(e.target);
+            const btn = e.target.querySelector('button');
+            const error = document.getElementById('error');
+            
+            btn.disabled = true;
+            btn.textContent = '登录中...';
+            error.style.display = 'none';
+            
+            try {
+                const res = await fetch('/api/login', { method: 'POST', body: fd });
+                const data = await res.json();
+                if (data.success) {
+                    location.href = '/';
+                } else {
+                    error.textContent = data.message || '登录失败';
+                    error.style.display = 'block';
+                }
+            } catch {
+                error.textContent = '网络错误';
+                error.style.display = 'block';
+            }
+            btn.disabled = false;
+            btn.textContent = '登录';
+        };
+    </script>
+</body>
+</html>
+`;
+
+export const htmlContent = \`
 <!DOCTYPE html>
 <html lang="zh-CN">
 <head>
@@ -15,9 +116,18 @@ export const htmlContent = `
         }
         .container { max-width: 960px; margin: 0 auto; padding: 40px 20px; }
         
-        header { margin-bottom: 32px; }
+        header { margin-bottom: 32px; display: flex; justify-content: space-between; align-items: center; }
         header h1 { font-size: 24px; font-weight: 600; color: #111; }
-        header p { color: #666; font-size: 14px; margin-top: 4px; }
+        .logout-btn {
+            background: none;
+            border: 1px solid #ddd;
+            padding: 6px 12px;
+            border-radius: 4px;
+            font-size: 12px;
+            color: #666;
+            cursor: pointer;
+        }
+        .logout-btn:hover { border-color: #ff4d4f; color: #ff4d4f; }
 
         .upload-box {
             background: #fff;
@@ -60,8 +170,6 @@ export const htmlContent = `
             overflow: hidden;
             cursor: pointer;
         }
-        
-        /* Skeleton loading animation */
         .grid-item::before {
             content: '';
             position: absolute;
@@ -71,12 +179,10 @@ export const htmlContent = `
             animation: shimmer 1.5s infinite;
         }
         .grid-item.loaded::before { display: none; }
-        
         @keyframes shimmer {
             0% { background-position: 200% 0; }
             100% { background-position: -200% 0; }
         }
-        
         .grid-item img {
             width: 100%; height: 100%;
             object-fit: cover;
@@ -84,8 +190,6 @@ export const htmlContent = `
             transition: opacity 0.3s ease;
         }
         .grid-item.loaded img { opacity: 1; }
-        
-        .grid-item:hover img { transform: scale(1.02); }
         .grid-item .actions {
             position: absolute;
             bottom: 0; left: 0; right: 0;
@@ -114,8 +218,7 @@ export const htmlContent = `
             padding: 12px 20px; border-radius: 6px;
             font-size: 14px; display: none; z-index: 100;
         }
-        .toast.show { display: block; animation: fadeIn 0.2s; }
-        @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
+        .toast.show { display: block; }
 
         .modal {
             position: fixed; inset: 0;
@@ -137,7 +240,7 @@ export const htmlContent = `
     <div class="container">
         <header>
             <h1>图床</h1>
-            <p>上传图片，获取链接</p>
+            <button class="logout-btn" id="logout">退出登录</button>
         </header>
 
         <div class="upload-box" id="upload">
@@ -173,6 +276,12 @@ export const htmlContent = `
             setTimeout(() => toast.classList.remove('show'), 2000);
         }
 
+        // Logout
+        $('logout').onclick = async () => {
+            await fetch('/api/logout', { method: 'POST' });
+            location.href = '/login';
+        };
+
         upload.onclick = () => file.click();
         upload.ondragover = e => { e.preventDefault(); upload.classList.add('active'); };
         upload.ondragleave = () => upload.classList.remove('active');
@@ -197,6 +306,7 @@ export const htmlContent = `
                 fd.append('file', f);
                 try {
                     const res = await fetch('/upload', { method: 'POST', body: fd });
+                    if (res.status === 401) { location.href = '/login'; return; }
                     const data = await res.json();
                     if (data.url) {
                         await navigator.clipboard.writeText(data.url);
@@ -211,6 +321,7 @@ export const htmlContent = `
             gallery.innerHTML = '<div class="loading">加载中...</div>';
             try {
                 const res = await fetch('/api/images');
+                if (res.status === 401) { location.href = '/login'; return; }
                 const data = await res.json();
                 if (data.images?.length) {
                     gallery.innerHTML = '<div class="grid"></div>';
@@ -218,30 +329,21 @@ export const htmlContent = `
                     data.images.forEach(img => {
                         const el = document.createElement('div');
                         el.className = 'grid-item';
-                        el.innerHTML = \`
-                            <img data-src="\${img.thumb}" data-full="\${img.url}">
+                        el.innerHTML = \\\`
+                            <img data-src="\\\${img.thumb}" data-full="\\\${img.url}">
                             <div class="actions">
                                 <button class="btn-copy">复制</button>
                                 <button class="btn-del">删除</button>
                             </div>
-                        \`;
+                        \\\`;
                         
                         const imgEl = el.querySelector('img');
                         const image = new Image();
-                        image.onload = () => {
-                            imgEl.src = img.thumb;
-                            el.classList.add('loaded');
-                        };
-                        image.onerror = () => {
-                            imgEl.src = img.url;
-                            el.classList.add('loaded');
-                        };
+                        image.onload = () => { imgEl.src = img.thumb; el.classList.add('loaded'); };
+                        image.onerror = () => { imgEl.src = img.url; el.classList.add('loaded'); };
                         image.src = img.thumb;
                         
-                        imgEl.onclick = () => {
-                            preview.src = img.url;
-                            modal.classList.add('show');
-                        };
+                        imgEl.onclick = () => { preview.src = img.url; modal.classList.add('show'); };
                         el.querySelector('.btn-copy').onclick = async e => {
                             e.stopPropagation();
                             await navigator.clipboard.writeText(img.url);
@@ -250,7 +352,8 @@ export const htmlContent = `
                         el.querySelector('.btn-del').onclick = async e => {
                             e.stopPropagation();
                             if (!confirm('确定删除？')) return;
-                            await fetch('/api/images/' + img.key, { method: 'DELETE' });
+                            const res = await fetch('/api/images/' + img.key, { method: 'DELETE' });
+                            if (res.status === 401) { location.href = '/login'; return; }
                             showToast('已删除');
                             loadGallery();
                         };
@@ -270,4 +373,4 @@ export const htmlContent = `
     </script>
 </body>
 </html>
-`;
+\`;

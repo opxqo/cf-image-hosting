@@ -1,18 +1,68 @@
 import { Hono } from 'hono';
-import { htmlContent } from './html';
+import { getCookie, setCookie, deleteCookie } from 'hono/cookie';
+import { htmlContent, loginPage } from './html';
 
 type Bindings = {
     MY_BUCKET: R2Bucket;
-    AUTH_TOKEN?: string;
+    USERNAME: string;
+    PASSWORD: string;
 };
 
 const app = new Hono<{ Bindings: Bindings }>();
 
-// 首页
-app.get('/', (c) => c.html(htmlContent));
+// 简单的 session token 生成
+function generateToken(): string {
+    return crypto.randomUUID() + '-' + Date.now();
+}
 
-// 图片列表 API
+// 验证登录状态
+function isLoggedIn(c: any): boolean {
+    const token = getCookie(c, 'session');
+    return !!token && token.length > 10;
+}
+
+// 登录页面
+app.get('/login', (c) => {
+    if (isLoggedIn(c)) return c.redirect('/');
+    return c.html(loginPage);
+});
+
+// 登录 API
+app.post('/api/login', async (c) => {
+    const body = await c.req.parseBody();
+    const username = body['username'];
+    const password = body['password'];
+
+    if (username === c.env.USERNAME && password === c.env.PASSWORD) {
+        const token = generateToken();
+        setCookie(c, 'session', token, {
+            path: '/',
+            httpOnly: true,
+            secure: true,
+            sameSite: 'Strict',
+            maxAge: 60 * 60 * 24 * 7, // 7 天
+        });
+        return c.json({ success: true });
+    }
+    return c.json({ success: false, message: '用户名或密码错误' }, 401);
+});
+
+// 登出 API
+app.post('/api/logout', (c) => {
+    deleteCookie(c, 'session', { path: '/' });
+    return c.json({ success: true });
+});
+
+// 首页 - 需要登录
+app.get('/', (c) => {
+    if (!isLoggedIn(c)) return c.redirect('/login');
+    return c.html(htmlContent);
+});
+
+// 图片列表 API - 需要登录
 app.get('/api/images', async (c) => {
+    if (!isLoggedIn(c)) return c.json({ success: false, message: 'Unauthorized' }, 401);
+
     try {
         const list = await c.env.MY_BUCKET.list({ limit: 100 });
         const origin = new URL(c.req.url).origin;
@@ -20,7 +70,7 @@ app.get('/api/images', async (c) => {
             key: obj.key,
             size: obj.size,
             uploaded: obj.uploaded.toISOString(),
-            url: `${origin}/${obj.key}`,
+            url: `${origin}/i/${obj.key}`,
             thumb: `${origin}/thumb/${obj.key}`,
         }));
         return c.json({ success: true, images });
@@ -29,57 +79,27 @@ app.get('/api/images', async (c) => {
     }
 });
 
-// 缩略图 API (使用 Cloudflare Image Resizing)
+// 缩略图 - 公开访问
 app.get('/thumb/:key', async (c) => {
-    const key = c.req.param('key');
-    const object = await c.env.MY_BUCKET.get(key);
-
+    const object = await c.env.MY_BUCKET.get(c.req.param('key'));
     if (!object) return c.text('Not Found', 404);
 
     const headers = new Headers();
     object.writeHttpMetadata(headers);
     headers.set('Cache-Control', 'public, max-age=31536000');
 
-    // 尝试使用 Cloudflare Image Resizing
-    // 如果没有开启此功能，则返回原图
-    const originalUrl = new URL(c.req.url).origin + '/' + key;
-
-    try {
-        const resized = await fetch(originalUrl, {
-            cf: {
-                image: {
-                    width: 300,
-                    height: 300,
-                    fit: 'cover',
-                    quality: 80,
-                },
-            },
-        });
-        if (resized.ok) {
-            return new Response(resized.body, { headers });
-        }
-    } catch {
-        // Image Resizing 不可用，返回原图
-    }
-
     return new Response(object.body, { headers });
 });
 
-// 图片上传 API
+// 图片上传 - 需要登录
 app.post('/upload', async (c) => {
-    const authToken = c.env.AUTH_TOKEN;
-    if (authToken) {
-        const authHeader = c.req.header('Authorization');
-        if (!authHeader || !authHeader.endsWith(authToken)) {
-            return c.json({ success: false, message: 'Unauthorized' }, 401);
-        }
-    }
+    if (!isLoggedIn(c)) return c.json({ success: false, message: 'Unauthorized' }, 401);
 
     const body = await c.req.parseBody();
     const file = body['file'];
 
     if (!file || !(file instanceof File)) {
-        return c.json({ success: false, message: 'No file uploaded' }, 400);
+        return c.json({ success: false, message: 'No file' }, 400);
     }
 
     const ext = file.name.split('.').pop() || 'png';
@@ -90,24 +110,16 @@ app.post('/upload', async (c) => {
             httpMetadata: { contentType: file.type },
         });
 
-        const url = new URL(c.req.url);
-        const fileUrl = `${url.origin}/${filename}`;
-
-        return c.json({ success: true, url: fileUrl, imgUrl: fileUrl });
+        const url = new URL(c.req.url).origin + '/i/' + filename;
+        return c.json({ success: true, url, imgUrl: url });
     } catch (err) {
         return c.json({ success: false, message: String(err) }, 500);
     }
 });
 
-// 删除图片 API
+// 删除图片 - 需要登录
 app.delete('/api/images/:key', async (c) => {
-    const authToken = c.env.AUTH_TOKEN;
-    if (authToken) {
-        const authHeader = c.req.header('Authorization');
-        if (!authHeader || !authHeader.endsWith(authToken)) {
-            return c.json({ success: false, message: 'Unauthorized' }, 401);
-        }
-    }
+    if (!isLoggedIn(c)) return c.json({ success: false, message: 'Unauthorized' }, 401);
 
     try {
         await c.env.MY_BUCKET.delete(c.req.param('key'));
@@ -117,8 +129,8 @@ app.delete('/api/images/:key', async (c) => {
     }
 });
 
-// 图片获取 API
-app.get('/:key', async (c) => {
+// 图片访问 - 公开
+app.get('/i/:key', async (c) => {
     const object = await c.env.MY_BUCKET.get(c.req.param('key'));
     if (!object) return c.text('Not Found', 404);
 
