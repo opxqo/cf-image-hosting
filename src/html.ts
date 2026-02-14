@@ -330,13 +330,82 @@ export const htmlContent = `<!DOCTYPE html>
         }
         .toast.show { transform: translateY(0); opacity: 1; }
 
-        /* ── Responsive ── */
+        /* ── Touch devices: always show overlay ── */
+        @media (hover: none) {
+            .grid-item .overlay { opacity: 1; }
+            .grid-item .overlay .btns button { padding: 8px 0; font-size: 11px; min-height: 32px; }
+            .tab .del-folder { display: inline; }
+        }
+
+        /* ── Mobile ── */
         @media (max-width: 640px) {
-            .header { padding: 10px 14px; }
-            .container { padding: 16px 12px 80px; }
-            .grid { grid-template-columns: repeat(auto-fill, minmax(110px, 1fr)); gap: 6px; }
-            .dropzone { padding: 24px; }
-            .gallery-header { flex-direction: column; align-items: flex-start; }
+            body { padding-bottom: env(safe-area-inset-bottom, 0); }
+            .header { padding: 10px 14px; padding-top: calc(10px + env(safe-area-inset-top, 0)); }
+            .container { padding: 14px 12px calc(80px + env(safe-area-inset-bottom, 0)); }
+
+            /* Upload */
+            .upload-card { padding: 12px; margin-bottom: 16px; }
+            .upload-top { gap: 6px; }
+            .folder-select { height: 36px; font-size: 14px; }
+            .btn-outline.sm { height: 36px; padding: 0 12px; font-size: 13px; }
+            .dropzone { padding: 24px 16px; }
+            .dropzone svg { width: 28px; height: 28px; }
+            .dropzone p { font-size: 14px; }
+            .progress-bar { width: 80px; }
+
+            /* Tabs: horizontal scroll */
+            .gallery-header { flex-direction: column; align-items: stretch; gap: 8px; }
+            .tabs {
+                flex-wrap: nowrap; overflow-x: auto; -webkit-overflow-scrolling: touch;
+                scrollbar-width: none; padding-bottom: 2px;
+            }
+            .tabs::-webkit-scrollbar { display: none; }
+            .tab { flex-shrink: 0; height: 32px; padding: 0 14px; font-size: 13px; }
+            .gallery-actions { justify-content: flex-end; }
+            .gallery-actions .btn-outline.sm { height: 32px; padding: 0 12px; font-size: 13px; }
+
+            /* Grid: 3 columns on phones */
+            .grid { grid-template-columns: repeat(3, 1fr); gap: 4px; }
+            .grid-item { border-radius: calc(var(--radius) - 1px); }
+            .grid-item .overlay { padding: 16px 4px 4px; gap: 2px; }
+            .overlay .info { font-size: 9px; }
+            .overlay .btns { gap: 2px; }
+            .overlay .btns button { padding: 6px 0; font-size: 9px; border-radius: 2px; min-height: 28px; }
+            .grid-item .check { width: 24px; height: 24px; font-size: 13px; top: 4px; left: 4px; }
+
+            /* Batch bar: full width */
+            .batch-bar {
+                left: 12px; right: 12px; transform: none;
+                border-radius: var(--radius); padding: 10px 14px;
+                bottom: calc(-60px - env(safe-area-inset-bottom, 0));
+            }
+            .batch-bar.show { bottom: calc(12px + env(safe-area-inset-bottom, 0)); }
+
+            /* Modal */
+            .modal img { max-width: 100%; max-height: 80vh; border-radius: 0; }
+            .modal-top { padding: 12px 14px; padding-top: calc(12px + env(safe-area-inset-top, 0)); }
+            .modal-close { width: 40px; height: 40px; font-size: 20px; }
+            .nav-btn { width: 40px; height: 40px; font-size: 24px; }
+            .nav-prev { left: 6px; }
+            .nav-next { right: 6px; }
+
+            /* Toast: centered */
+            .toast {
+                right: auto; left: 50%; transform: translateX(-50%) translateY(60px);
+                white-space: nowrap; max-width: 90vw;
+                bottom: calc(16px + env(safe-area-inset-bottom, 0));
+            }
+            .toast.show { transform: translateX(-50%) translateY(0); }
+
+            /* Load more */
+            .load-more { width: 100%; height: 40px; font-size: 14px; }
+        }
+
+        /* ── Small phones ── */
+        @media (max-width: 380px) {
+            .grid { grid-template-columns: repeat(2, 1fr); }
+            .header h1 { font-size: 14px; }
+            .overlay .btns button { font-size: 8px; }
         }
     </style>
 </head>
