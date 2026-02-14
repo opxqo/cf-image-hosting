@@ -11,6 +11,8 @@ type Bindings = {
 type Env = { Bindings: Bindings };
 const app = new Hono<Env>();
 
+const R2_DOMAIN = 'https://images.opxqo.com';
+
 /* ═══════════════════════════════════════════
    Auth: HMAC-SHA256 签名 Token
    ═══════════════════════════════════════════ */
@@ -158,7 +160,6 @@ app.get('/api/images', async (c) => {
     if (cursorQ) (opts as any).cursor = cursorQ;
 
     const list = await c.env.MY_BUCKET.list(opts);
-    const origin = new URL(c.req.url).origin;
 
     const images = list.objects
         .filter(o => (!folder || folder === '默认') ? !o.key.includes('/') : true)
@@ -167,8 +168,8 @@ app.get('/api/images', async (c) => {
             name: o.key.includes('/') ? o.key.split('/').pop() : o.key,
             size: o.size,
             uploaded: o.uploaded.toISOString(),
-            url: origin + '/i/' + o.key,
-            thumb: origin + '/thumb/' + o.key,
+            url: R2_DOMAIN + '/' + o.key,
+            thumb: R2_DOMAIN + '/' + o.key,
         }));
 
     return c.json({
@@ -195,7 +196,7 @@ app.post('/upload', async (c) => {
         httpMetadata: { contentType: file.type },
     });
 
-    const url = new URL(c.req.url).origin + '/i/' + key;
+    const url = R2_DOMAIN + '/' + key;
     return c.json({ success: true, url, key });
 });
 
