@@ -1,23 +1,29 @@
-/* ═══ 共享主题 CSS 变量 ═══ */
+/* ═══ shadcn/ui 风格主题 — Zinc 色系 ═══ */
 const themeCSS = `
 :root {
-    --bg: #0c0c14; --surface: #161625; --surface-hover: #1e1e32;
-    --border: #2a2a3d; --border-hover: #3a3a55;
-    --text: #eeeef0; --text-2: #8b8ba0; --text-3: #5e5e75;
-    --primary: #7c3aed; --primary-hover: #6d28d9; --primary-sub: rgba(124,58,237,0.15);
-    --danger: #ef4444; --danger-hover: #dc2626;
-    --success: #22c55e;
-    --radius: 10px; --radius-sm: 6px;
-    --shadow: 0 4px 24px rgba(0,0,0,0.4);
+    --bg: #09090b; --fg: #fafafa;
+    --card: #09090b; --card-fg: #fafafa;
+    --muted: #27272a; --muted-fg: #a1a1aa;
+    --border: #27272a; --input: #27272a;
+    --primary: #fafafa; --primary-fg: #18181b;
+    --secondary: #27272a; --secondary-fg: #fafafa;
+    --accent: #27272a; --accent-fg: #fafafa;
+    --destructive: #7f1d1d; --destructive-fg: #fafafa;
+    --ring: #d4d4d8;
+    --radius: 0.375rem;
     --font: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
     color-scheme: dark;
 }
 [data-theme="light"] {
-    --bg: #f4f4f8; --surface: #ffffff; --surface-hover: #f0f0f5;
-    --border: #e2e2ea; --border-hover: #d1d1dd;
-    --text: #1a1a28; --text-2: #6b6b7e; --text-3: #9b9bae;
-    --primary-sub: rgba(124,58,237,0.08);
-    --shadow: 0 4px 16px rgba(0,0,0,0.06);
+    --bg: #ffffff; --fg: #09090b;
+    --card: #ffffff; --card-fg: #09090b;
+    --muted: #f4f4f5; --muted-fg: #71717a;
+    --border: #e4e4e7; --input: #e4e4e7;
+    --primary: #18181b; --primary-fg: #fafafa;
+    --secondary: #f4f4f5; --secondary-fg: #18181b;
+    --accent: #f4f4f5; --accent-fg: #18181b;
+    --destructive: #ef4444; --destructive-fg: #fafafa;
+    --ring: #18181b;
     color-scheme: light;
 }
 `;
@@ -35,36 +41,32 @@ export const loginPage = `<!DOCTYPE html>
         ${themeCSS}
         * { box-sizing: border-box; margin: 0; padding: 0; }
         body {
-            font-family: var(--font);
-            background: var(--bg);
-            min-height: 100vh;
-            display: flex; align-items: center; justify-content: center;
-            transition: background 0.3s;
+            font-family: var(--font); background: var(--bg); color: var(--fg);
+            min-height: 100vh; display: flex; align-items: center; justify-content: center;
         }
         .card {
-            background: var(--surface); border: 1px solid var(--border);
-            border-radius: 16px; padding: 40px; width: 100%; max-width: 380px;
-            box-shadow: var(--shadow);
+            background: var(--card); border: 1px solid var(--border);
+            border-radius: calc(var(--radius) + 2px); padding: 32px; width: 100%; max-width: 360px;
         }
-        .logo { text-align: center; margin-bottom: 8px; font-size: 36px; }
-        h1 { text-align: center; font-size: 22px; font-weight: 600; color: var(--text); margin-bottom: 4px; }
-        .sub { text-align: center; font-size: 13px; color: var(--text-2); margin-bottom: 28px; }
-        .field { margin-bottom: 18px; }
-        .field label { display: block; font-size: 13px; color: var(--text-2); margin-bottom: 6px; font-weight: 500; }
+        .logo { text-align: center; margin-bottom: 6px; font-size: 32px; }
+        h1 { text-align: center; font-size: 18px; font-weight: 600; color: var(--fg); margin-bottom: 2px; letter-spacing: -0.025em; }
+        .sub { text-align: center; font-size: 13px; color: var(--muted-fg); margin-bottom: 24px; }
+        .field { margin-bottom: 16px; }
+        .field label { display: block; font-size: 13px; font-weight: 500; color: var(--fg); margin-bottom: 6px; }
         .field input {
-            width: 100%; padding: 11px 14px; background: var(--bg); color: var(--text);
-            border: 1px solid var(--border); border-radius: var(--radius-sm);
-            font-size: 14px; outline: none; transition: border-color 0.2s;
+            width: 100%; padding: 8px 12px; background: transparent; color: var(--fg);
+            border: 1px solid var(--input); border-radius: var(--radius);
+            font-size: 13px; outline: none; transition: border-color 0.15s, box-shadow 0.15s;
         }
-        .field input:focus { border-color: var(--primary); }
+        .field input:focus { border-color: var(--ring); box-shadow: 0 0 0 2px color-mix(in srgb, var(--ring) 20%, transparent); }
         .btn {
-            width: 100%; padding: 12px; background: var(--primary); color: #fff; border: none;
-            border-radius: var(--radius-sm); font-size: 14px; font-weight: 600;
-            cursor: pointer; transition: background 0.2s;
+            width: 100%; padding: 8px; background: var(--primary); color: var(--primary-fg); border: none;
+            border-radius: var(--radius); font-size: 13px; font-weight: 500;
+            cursor: pointer; transition: opacity 0.15s;
         }
-        .btn:hover { background: var(--primary-hover); }
+        .btn:hover { opacity: 0.9; }
         .btn:disabled { opacity: 0.5; cursor: not-allowed; }
-        .err { color: var(--danger); font-size: 13px; text-align: center; margin-top: 14px; display: none; }
+        .err { color: var(--destructive); font-size: 13px; text-align: center; margin-top: 12px; display: none; }
     </style>
 </head>
 <body>
@@ -73,8 +75,8 @@ export const loginPage = `<!DOCTYPE html>
         <h1>图床</h1>
         <p class="sub">登录以管理您的图片</p>
         <form id="form">
-            <div class="field"><label>用户名</label><input type="text" name="username" required autofocus></div>
-            <div class="field"><label>密码</label><input type="password" name="password" required></div>
+            <div class="field"><label>用户名</label><input type="text" name="username" required autofocus placeholder="输入用户名"></div>
+            <div class="field"><label>密码</label><input type="password" name="password" required placeholder="输入密码"></div>
             <button type="submit" class="btn" id="sbtn">登录</button>
             <div class="err" id="err"></div>
         </form>
@@ -109,250 +111,249 @@ export const htmlContent = `<!DOCTYPE html>
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>图床</title>
     <link rel="preconnect" href="https://fonts.googleapis.com">
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
     <style>
         ${themeCSS}
         * { box-sizing: border-box; margin: 0; padding: 0; }
-        body { font-family: var(--font); background: var(--bg); color: var(--text); transition: background 0.3s, color 0.3s; }
+        body { font-family: var(--font); background: var(--bg); color: var(--fg); font-size: 14px; }
 
         /* ── Header ── */
         .header {
             position: sticky; top: 0; z-index: 50;
             display: flex; align-items: center; justify-content: space-between;
-            padding: 14px 24px;
-            background: color-mix(in srgb, var(--bg) 80%, transparent);
-            backdrop-filter: blur(12px); -webkit-backdrop-filter: blur(12px);
+            padding: 12px 24px; background: var(--bg);
             border-bottom: 1px solid var(--border);
         }
-        .header h1 { font-size: 18px; font-weight: 700; display: flex; align-items: center; gap: 8px; }
-        .header-actions { display: flex; gap: 8px; align-items: center; }
+        .header h1 { font-size: 15px; font-weight: 600; letter-spacing: -0.025em; display: flex; align-items: center; gap: 6px; }
+        .header-actions { display: flex; gap: 6px; align-items: center; }
+
+        /* ── Buttons ── */
+        .btn-ghost {
+            display: inline-flex; align-items: center; justify-content: center;
+            height: 32px; padding: 0 10px; font-size: 13px; font-weight: 500;
+            background: transparent; border: none; border-radius: var(--radius);
+            color: var(--muted-fg); cursor: pointer; transition: background 0.1s, color 0.1s;
+        }
+        .btn-ghost:hover { background: var(--accent); color: var(--accent-fg); }
+        .btn-outline {
+            display: inline-flex; align-items: center; justify-content: center;
+            height: 32px; padding: 0 12px; font-size: 13px; font-weight: 500;
+            background: transparent; border: 1px solid var(--input); border-radius: var(--radius);
+            color: var(--fg); cursor: pointer; transition: background 0.1s;
+        }
+        .btn-outline:hover { background: var(--accent); }
+        .btn-outline.sm { height: 28px; padding: 0 10px; font-size: 12px; }
+        .btn-primary {
+            display: inline-flex; align-items: center; justify-content: center;
+            height: 32px; padding: 0 14px; font-size: 13px; font-weight: 500;
+            background: var(--primary); color: var(--primary-fg); border: none;
+            border-radius: var(--radius); cursor: pointer; transition: opacity 0.1s;
+        }
+        .btn-primary:hover { opacity: 0.9; }
+        .btn-destructive {
+            display: inline-flex; align-items: center; justify-content: center;
+            height: 28px; padding: 0 12px; font-size: 12px; font-weight: 500;
+            background: var(--destructive); color: var(--destructive-fg); border: none;
+            border-radius: var(--radius); cursor: pointer; transition: opacity 0.1s;
+        }
+        .btn-destructive:hover { opacity: 0.9; }
         .icon-btn {
-            width: 36px; height: 36px; display: flex; align-items: center; justify-content: center;
-            background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius-sm);
-            color: var(--text-2); cursor: pointer; font-size: 16px; transition: all 0.2s;
+            width: 32px; height: 32px; display: flex; align-items: center; justify-content: center;
+            background: transparent; border: none; border-radius: var(--radius);
+            color: var(--muted-fg); cursor: pointer; font-size: 15px; transition: background 0.1s, color 0.1s;
         }
-        .icon-btn:hover { border-color: var(--primary); color: var(--primary); }
-        .btn-sm {
-            padding: 7px 14px; font-size: 12px; font-weight: 500; border-radius: var(--radius-sm);
-            border: 1px solid var(--border); background: var(--surface); color: var(--text-2);
-            cursor: pointer; transition: all 0.2s;
-        }
-        .btn-sm:hover { border-color: var(--border-hover); color: var(--text); }
-        .btn-sm.danger:hover { border-color: var(--danger); color: var(--danger); }
+        .icon-btn:hover { background: var(--accent); color: var(--accent-fg); }
 
         /* ── Container ── */
-        .container { max-width: 1080px; margin: 0 auto; padding: 24px 20px 80px; }
+        .container { max-width: 960px; margin: 0 auto; padding: 24px 20px 80px; }
 
         /* ── Upload Section ── */
         .upload-card {
-            background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius);
-            padding: 20px; margin-bottom: 24px;
+            border: 1px solid var(--border); border-radius: calc(var(--radius) + 2px);
+            padding: 16px; margin-bottom: 24px;
         }
-        .upload-top { display: flex; gap: 8px; margin-bottom: 14px; align-items: center; }
+        .upload-top { display: flex; gap: 8px; margin-bottom: 12px; align-items: center; }
         .folder-select {
-            flex: 1; padding: 8px 12px; background: var(--bg); color: var(--text);
-            border: 1px solid var(--border); border-radius: var(--radius-sm);
+            flex: 1; height: 32px; padding: 0 10px; background: transparent; color: var(--fg);
+            border: 1px solid var(--input); border-radius: var(--radius);
             font-size: 13px; outline: none; cursor: pointer;
         }
-        .folder-select:focus { border-color: var(--primary); }
-        .btn-outline {
-            padding: 8px 14px; font-size: 13px; font-weight: 500;
-            background: transparent; border: 1px solid var(--border); border-radius: var(--radius-sm);
-            color: var(--text-2); cursor: pointer; transition: all 0.2s; white-space: nowrap;
-        }
-        .btn-outline:hover { border-color: var(--primary); color: var(--primary); }
+        .folder-select:focus { border-color: var(--ring); box-shadow: 0 0 0 2px color-mix(in srgb, var(--ring) 20%, transparent); }
 
         .dropzone {
-            border: 2px dashed var(--border); border-radius: var(--radius);
-            padding: 36px; text-align: center; cursor: pointer;
-            transition: all 0.25s;
+            border: 1px dashed var(--border); border-radius: var(--radius);
+            padding: 32px; text-align: center; cursor: pointer;
+            transition: border-color 0.15s, background 0.15s;
         }
-        .dropzone:hover, .dropzone.active { border-color: var(--primary); background: var(--primary-sub); }
-        .dropzone svg { width: 36px; height: 36px; color: var(--text-3); margin-bottom: 8px; transition: color 0.2s; }
-        .dropzone:hover svg { color: var(--primary); }
-        .dropzone p { color: var(--text-2); font-size: 14px; }
-        .dropzone .hint { color: var(--text-3); font-size: 12px; margin-top: 4px; }
+        .dropzone:hover, .dropzone.active { border-color: var(--muted-fg); background: var(--muted); }
+        .dropzone svg { width: 32px; height: 32px; color: var(--muted-fg); margin-bottom: 6px; }
+        .dropzone p { color: var(--muted-fg); font-size: 13px; }
+        .dropzone .hint { color: var(--muted-fg); font-size: 12px; margin-top: 2px; opacity: 0.7; }
 
         /* ── Progress ── */
-        .progress-list { margin-top: 12px; display: flex; flex-direction: column; gap: 8px; }
+        .progress-list { margin-top: 10px; display: flex; flex-direction: column; gap: 6px; }
         .progress-item {
-            display: flex; align-items: center; gap: 10px; padding: 8px 12px;
-            background: var(--bg); border-radius: var(--radius-sm); font-size: 12px; color: var(--text-2);
-            animation: fadeIn 0.2s;
+            display: flex; align-items: center; gap: 10px; padding: 6px 10px;
+            background: var(--muted); border-radius: var(--radius); font-size: 12px; color: var(--muted-fg);
         }
         .progress-item .name { flex: 1; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
-        .progress-bar { width: 120px; height: 4px; background: var(--border); border-radius: 2px; overflow: hidden; }
-        .progress-fill { height: 100%; background: var(--primary); border-radius: 2px; transition: width 0.15s; }
-        .progress-item.done .progress-fill { background: var(--success); }
-        .progress-item .pct { width: 36px; text-align: right; font-variant-numeric: tabular-nums; }
+        .progress-bar { width: 100px; height: 3px; background: var(--border); border-radius: 2px; overflow: hidden; }
+        .progress-fill { height: 100%; background: var(--fg); border-radius: 2px; transition: width 0.15s; }
+        .progress-item.done .progress-fill { background: #22c55e; }
+        .progress-item .pct { width: 32px; text-align: right; font-variant-numeric: tabular-nums; }
 
         /* ── Gallery Header ── */
         .gallery-header {
             display: flex; align-items: center; justify-content: space-between;
-            margin-bottom: 16px; gap: 12px; flex-wrap: wrap;
+            margin-bottom: 12px; gap: 10px; flex-wrap: wrap;
         }
-        .tabs { display: flex; gap: 6px; flex-wrap: wrap; flex: 1; }
+        .tabs { display: flex; gap: 4px; flex-wrap: wrap; flex: 1; }
         .tab {
-            padding: 6px 14px; font-size: 12px; font-weight: 500;
-            background: var(--surface); border: 1px solid var(--border); border-radius: 20px;
-            color: var(--text-2); cursor: pointer; transition: all 0.2s; position: relative;
+            height: 28px; padding: 0 12px; font-size: 12px; font-weight: 500;
+            background: transparent; border: 1px solid transparent; border-radius: var(--radius);
+            color: var(--muted-fg); cursor: pointer; transition: all 0.1s;
+            display: inline-flex; align-items: center; gap: 4px;
         }
-        .tab:hover { border-color: var(--border-hover); color: var(--text); }
-        .tab.active { background: var(--primary); border-color: var(--primary); color: #fff; }
+        .tab:hover { background: var(--muted); color: var(--fg); }
+        .tab.active { background: var(--muted); color: var(--fg); border-color: var(--border); }
         .tab .del-folder {
-            display: none; margin-left: 4px; font-size: 14px; line-height: 1; opacity: 0.6;
+            display: none; font-size: 13px; line-height: 1; opacity: 0.5; margin-left: 2px;
         }
         .tab:hover .del-folder { display: inline; }
         .tab:hover .del-folder:hover { opacity: 1; }
-        .gallery-actions { display: flex; gap: 6px; }
+        .gallery-actions { display: flex; gap: 4px; }
 
         /* ── Batch Bar ── */
         .batch-bar {
-            position: fixed; bottom: -60px; left: 50%; transform: translateX(-50%);
-            display: flex; align-items: center; gap: 12px;
-            padding: 12px 24px; background: var(--surface); border: 1px solid var(--border);
-            border-radius: 12px; box-shadow: var(--shadow); z-index: 60;
-            transition: bottom 0.3s;
+            position: fixed; bottom: -56px; left: 50%; transform: translateX(-50%);
+            display: flex; align-items: center; gap: 10px;
+            padding: 10px 20px; background: var(--card); border: 1px solid var(--border);
+            border-radius: calc(var(--radius) + 2px); z-index: 60;
+            transition: bottom 0.2s ease;
         }
-        .batch-bar.show { bottom: 24px; }
-        .batch-bar span { font-size: 13px; color: var(--text-2); }
-        .btn-danger {
-            padding: 7px 16px; font-size: 12px; font-weight: 600;
-            background: var(--danger); color: #fff; border: none; border-radius: var(--radius-sm);
-            cursor: pointer; transition: background 0.2s;
-        }
-        .btn-danger:hover { background: var(--danger-hover); }
+        .batch-bar.show { bottom: 20px; }
+        .batch-bar span { font-size: 13px; color: var(--muted-fg); }
 
         /* ── Grid ── */
         .grid {
             display: grid;
-            grid-template-columns: repeat(auto-fill, minmax(160px, 1fr));
-            gap: 12px;
+            grid-template-columns: repeat(auto-fill, minmax(150px, 1fr));
+            gap: 8px;
         }
         .grid-item {
-            position: relative; aspect-ratio: 1; background: var(--surface);
+            position: relative; aspect-ratio: 1; background: var(--muted);
             border: 1px solid var(--border); border-radius: var(--radius);
-            overflow: hidden; cursor: pointer; transition: border-color 0.2s;
+            overflow: hidden; cursor: pointer; transition: border-color 0.15s;
         }
-        .grid-item:hover { border-color: var(--border-hover); }
-        .grid-item.selected { border-color: var(--primary); box-shadow: 0 0 0 2px var(--primary-sub); }
+        .grid-item:hover { border-color: var(--muted-fg); }
+        .grid-item.selected { border-color: var(--ring); box-shadow: 0 0 0 1px var(--ring); }
         .grid-item::before {
             content: ''; position: absolute; inset: 0;
-            background: linear-gradient(90deg, var(--surface) 25%, var(--surface-hover) 50%, var(--surface) 75%);
+            background: linear-gradient(90deg, var(--muted) 25%, var(--border) 50%, var(--muted) 75%);
             background-size: 200% 100%; animation: shimmer 1.5s infinite;
         }
         .grid-item.loaded::before { display: none; }
         @keyframes shimmer { 0%{background-position:200% 0} 100%{background-position:-200% 0} }
-        .grid-item img { width: 100%; height: 100%; object-fit: cover; opacity: 0; transition: opacity 0.3s; }
+        .grid-item img { width: 100%; height: 100%; object-fit: cover; opacity: 0; transition: opacity 0.2s; }
         .grid-item.loaded img { opacity: 1; }
 
         .grid-item .check {
-            position: absolute; top: 8px; left: 8px; width: 22px; height: 22px;
-            border: 2px solid rgba(255,255,255,0.6); border-radius: 50%;
+            position: absolute; top: 6px; left: 6px; width: 20px; height: 20px;
+            border: 1.5px solid rgba(255,255,255,0.6); border-radius: 4px;
             background: rgba(0,0,0,0.3); display: none; align-items: center; justify-content: center;
-            font-size: 12px; color: #fff; z-index: 5; transition: all 0.15s;
+            font-size: 11px; color: #fff; z-index: 5;
         }
         .select-mode .grid-item .check { display: flex; }
-        .grid-item.selected .check { background: var(--primary); border-color: var(--primary); }
+        .grid-item.selected .check { background: var(--fg); border-color: var(--fg); color: var(--bg); }
 
         .grid-item .overlay {
             position: absolute; bottom: 0; left: 0; right: 0;
-            padding: 28px 8px 8px; display: flex; flex-direction: column; gap: 6px;
-            background: linear-gradient(transparent, rgba(0,0,0,0.7));
-            opacity: 0; transition: opacity 0.2s;
+            padding: 24px 6px 6px; display: flex; flex-direction: column; gap: 4px;
+            background: linear-gradient(transparent, rgba(0,0,0,0.65));
+            opacity: 0; transition: opacity 0.15s;
         }
         .grid-item:hover .overlay { opacity: 1; }
-        .overlay .info { font-size: 11px; color: rgba(255,255,255,0.8); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
-        .overlay .btns { display: flex; gap: 4px; }
+        .overlay .info { font-size: 10px; color: rgba(255,255,255,0.7); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+        .overlay .btns { display: flex; gap: 3px; }
         .overlay .btns button {
-            flex: 1; padding: 5px; font-size: 10px; font-weight: 600; border: none;
-            border-radius: 4px; cursor: pointer; transition: opacity 0.15s; color: #fff;
+            flex: 1; padding: 4px 0; font-size: 10px; font-weight: 500; border: none;
+            border-radius: 3px; cursor: pointer; transition: opacity 0.1s;
+            background: rgba(255,255,255,0.15); color: #fff;
         }
-        .overlay .btns button:hover { opacity: 0.85; }
-        .btn-url { background: #6366f1; }
-        .btn-md { background: #0ea5e9; }
-        .btn-html { background: #10b981; }
-        .btn-rm { background: var(--danger); }
+        .overlay .btns button:hover { background: rgba(255,255,255,0.3); }
+        .overlay .btns .btn-rm { background: rgba(239,68,68,0.6); }
+        .overlay .btns .btn-rm:hover { background: rgba(239,68,68,0.8); }
 
         /* ── Empty & Loading ── */
-        .empty { text-align: center; padding: 60px 20px; color: var(--text-3); font-size: 14px; }
-        .empty svg { width: 48px; height: 48px; color: var(--text-3); margin-bottom: 12px; }
+        .empty { text-align: center; padding: 60px 20px; color: var(--muted-fg); font-size: 13px; }
+        .empty svg { width: 40px; height: 40px; color: var(--muted-fg); margin-bottom: 10px; opacity: 0.5; }
         .load-more {
-            display: block; margin: 24px auto 0; padding: 10px 32px;
-            background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius-sm);
-            color: var(--text-2); font-size: 13px; cursor: pointer; transition: all 0.2s;
+            display: block; margin: 20px auto 0; height: 32px; padding: 0 24px;
+            background: transparent; border: 1px solid var(--input); border-radius: var(--radius);
+            color: var(--fg); font-size: 13px; cursor: pointer; transition: background 0.1s;
         }
-        .load-more:hover { border-color: var(--primary); color: var(--primary); }
+        .load-more:hover { background: var(--accent); }
 
         /* ── Modal ── */
         .modal {
             position: fixed; inset: 0; z-index: 200;
-            background: rgba(0,0,0,0.85); backdrop-filter: blur(8px);
+            background: rgba(0,0,0,0.8);
             display: none; align-items: center; justify-content: center;
         }
         .modal.show { display: flex; }
-        .modal img { max-width: 90%; max-height: 85vh; border-radius: 6px; object-fit: contain; }
+        .modal img { max-width: 90%; max-height: 85vh; border-radius: var(--radius); object-fit: contain; }
         .modal-top {
-            position: absolute; top: 0; left: 0; right: 0; padding: 16px 20px;
+            position: absolute; top: 0; left: 0; right: 0; padding: 14px 16px;
             display: flex; justify-content: space-between; align-items: center;
-            background: linear-gradient(rgba(0,0,0,0.5), transparent);
         }
-        .modal-top .info { color: rgba(255,255,255,0.7); font-size: 13px; }
+        .modal-top .info { color: rgba(255,255,255,0.6); font-size: 12px; }
         .modal-close {
-            width: 36px; height: 36px; background: rgba(255,255,255,0.15); color: #fff;
-            border: none; border-radius: 50%; font-size: 20px; cursor: pointer; transition: background 0.2s;
+            width: 32px; height: 32px; background: rgba(255,255,255,0.1); color: rgba(255,255,255,0.7);
+            border: none; border-radius: var(--radius); font-size: 18px; cursor: pointer; transition: background 0.1s;
         }
-        .modal-close:hover { background: rgba(255,255,255,0.3); }
+        .modal-close:hover { background: rgba(255,255,255,0.2); }
         .nav-btn {
             position: absolute; top: 50%; transform: translateY(-50%);
-            width: 44px; height: 44px; background: rgba(255,255,255,0.1); color: #fff;
-            border: none; border-radius: 50%; font-size: 24px; cursor: pointer; transition: background 0.2s;
+            width: 36px; height: 36px; background: rgba(255,255,255,0.08); color: rgba(255,255,255,0.6);
+            border: none; border-radius: var(--radius); font-size: 22px; cursor: pointer; transition: background 0.1s;
         }
-        .nav-btn:hover { background: rgba(255,255,255,0.25); }
-        .nav-prev { left: 16px; }
-        .nav-next { right: 16px; }
+        .nav-btn:hover { background: rgba(255,255,255,0.15); color: #fff; }
+        .nav-prev { left: 12px; }
+        .nav-next { right: 12px; }
 
         /* ── Toast ── */
         .toast {
-            position: fixed; bottom: 24px; right: 24px; z-index: 300;
-            padding: 12px 20px; background: var(--surface); border: 1px solid var(--border);
-            border-radius: var(--radius-sm); color: var(--text); font-size: 13px;
-            box-shadow: var(--shadow); transform: translateY(80px); opacity: 0;
-            transition: all 0.3s;
+            position: fixed; bottom: 20px; right: 20px; z-index: 300;
+            padding: 10px 16px; background: var(--fg); color: var(--bg);
+            border-radius: var(--radius); font-size: 13px;
+            transform: translateY(60px); opacity: 0; transition: all 0.2s ease;
         }
         .toast.show { transform: translateY(0); opacity: 1; }
 
-        /* ── Animations ── */
-        @keyframes fadeIn { from { opacity: 0; transform: translateY(4px); } to { opacity: 1; transform: none; } }
-
         /* ── Responsive ── */
         @media (max-width: 640px) {
-            .header { padding: 12px 16px; }
-            .header h1 { font-size: 16px; }
+            .header { padding: 10px 14px; }
             .container { padding: 16px 12px 80px; }
-            .grid { grid-template-columns: repeat(auto-fill, minmax(110px, 1fr)); gap: 8px; }
+            .grid { grid-template-columns: repeat(auto-fill, minmax(110px, 1fr)); gap: 6px; }
             .dropzone { padding: 24px; }
-            .tabs { gap: 4px; }
             .gallery-header { flex-direction: column; align-items: flex-start; }
         }
     </style>
 </head>
 <body>
-    <!-- Header -->
     <header class="header">
         <h1>📷 图床</h1>
         <div class="header-actions">
             <button class="icon-btn" id="theme-btn" title="切换主题">🌙</button>
-            <button class="btn-sm danger" id="logout-btn">退出</button>
+            <button class="btn-ghost" id="logout-btn" style="color:var(--muted-fg)">退出</button>
         </div>
     </header>
 
     <div class="container">
-        <!-- Upload -->
         <div class="upload-card">
             <div class="upload-top">
                 <select class="folder-select" id="up-folder"><option value="默认">默认</option></select>
-                <button class="btn-outline" id="new-folder-btn">+ 新建文件夹</button>
+                <button class="btn-outline sm" id="new-folder-btn">+ 新建</button>
             </div>
             <div class="dropzone" id="dropzone">
                 <svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M12 16V4m0 0L8 8m4-4l4 4M4 14v4a2 2 0 002 2h12a2 2 0 002-2v-4"/></svg>
@@ -363,26 +364,23 @@ export const htmlContent = `<!DOCTYPE html>
             <div class="progress-list" id="progress-list"></div>
         </div>
 
-        <!-- Gallery Header -->
         <div class="gallery-header">
             <div class="tabs" id="tabs"></div>
             <div class="gallery-actions">
-                <button class="btn-sm" id="select-btn">选择</button>
-                <button class="btn-sm" id="refresh-btn">刷新</button>
+                <button class="btn-outline sm" id="select-btn">选择</button>
+                <button class="btn-outline sm" id="refresh-btn">刷新</button>
             </div>
         </div>
         <div id="gallery"></div>
         <div id="more-wrap" style="display:none"><button class="load-more" id="more-btn">加载更多</button></div>
     </div>
 
-    <!-- Batch Bar -->
     <div class="batch-bar" id="batch-bar">
         <span id="sel-count">0 张已选</span>
-        <button class="btn-danger" id="batch-del-btn">删除选中</button>
-        <button class="btn-sm" id="cancel-sel-btn">取消</button>
+        <button class="btn-destructive" id="batch-del-btn">删除选中</button>
+        <button class="btn-outline sm" id="cancel-sel-btn">取消</button>
     </div>
 
-    <!-- Preview Modal -->
     <div class="modal" id="modal">
         <div class="modal-top">
             <span class="info" id="modal-info"></span>
@@ -393,7 +391,6 @@ export const htmlContent = `<!DOCTYPE html>
         <button class="nav-btn nav-next" id="next-btn">›</button>
     </div>
 
-    <!-- Toast -->
     <div class="toast" id="toast"></div>
 
     <script>
@@ -422,7 +419,6 @@ export const htmlContent = `<!DOCTYPE html>
             });
         }
 
-        /* ── State ── */
         var currentFolder = '默认';
         var serverFolders = ['默认'];
         var localFolders = new Set();
@@ -444,7 +440,6 @@ export const htmlContent = `<!DOCTYPE html>
         applyTheme();
         D('theme-btn').onclick = function() { theme = theme === 'dark' ? 'light' : 'dark'; applyTheme(); };
 
-        /* ── Logout ── */
         D('logout-btn').onclick = async function() {
             await fetch('/api/logout', { method: 'POST' });
             location.href = '/login';
@@ -455,28 +450,23 @@ export const htmlContent = `<!DOCTYPE html>
             var all = Array.from(new Set(serverFolders.concat(Array.from(localFolders))));
             var sel = D('up-folder');
             sel.innerHTML = all.map(function(f) { return '<option value="' + f + '">' + f + '</option>'; }).join('');
-
             var tabs = D('tabs');
             tabs.innerHTML = all.map(function(f) {
                 var act = f === currentFolder ? ' active' : '';
                 var del = f !== '默认' ? '<span class="del-folder" data-del="' + f + '">✕</span>' : '';
                 return '<button class="tab' + act + '" data-folder="' + f + '">' + f + del + '</button>';
             }).join('');
-
             tabs.querySelectorAll('.tab').forEach(function(btn) {
                 btn.onclick = function(e) {
                     if (e.target.classList.contains('del-folder')) {
                         e.stopPropagation();
                         var name = e.target.getAttribute('data-del');
                         if (!confirm('删除文件夹 "' + name + '" 及其所有图片？')) return;
-                        deleteFolder(name);
-                        return;
+                        deleteFolder(name); return;
                     }
                     currentFolder = btn.getAttribute('data-folder');
-                    exitSelectMode();
-                    allImages = []; pageCursor = null;
-                    updateFolderUI();
-                    loadGallery(false);
+                    exitSelectMode(); allImages = []; pageCursor = null;
+                    updateFolderUI(); loadGallery(false);
                 };
             });
         }
@@ -496,21 +486,17 @@ export const htmlContent = `<!DOCTYPE html>
         async function deleteFolder(name) {
             try {
                 await authFetch('/api/folders/' + encodeURIComponent(name), { method: 'DELETE' });
-                showToast('文件夹已删除');
-                localFolders.delete(name);
+                showToast('文件夹已删除'); localFolders.delete(name);
                 if (currentFolder === name) { currentFolder = '默认'; allImages = []; pageCursor = null; }
-                loadFolders();
-                loadGallery(false);
+                loadFolders(); loadGallery(false);
             } catch(e) { showToast('删除失败'); }
         }
 
         D('new-folder-btn').onclick = function() {
             var name = prompt('请输入文件夹名称：');
             if (name && name.trim()) {
-                localFolders.add(name.trim());
-                updateFolderUI();
-                D('up-folder').value = name.trim();
-                showToast('文件夹已创建，上传后生效');
+                localFolders.add(name.trim()); updateFolderUI();
+                D('up-folder').value = name.trim(); showToast('文件夹已创建，上传后生效');
             }
         };
 
@@ -537,10 +523,8 @@ export const htmlContent = `<!DOCTYPE html>
                     var last = ok[ok.length - 1].value;
                     navigator.clipboard.writeText(last.url).catch(function(){});
                     showToast(ok.length + ' 张已上传，链接已复制');
-                    currentFolder = folder;
-                    allImages = []; pageCursor = null;
-                    loadFolders();
-                    loadGallery(false);
+                    currentFolder = folder; allImages = []; pageCursor = null;
+                    loadFolders(); loadGallery(false);
                 }
             });
         }
@@ -554,26 +538,18 @@ export const htmlContent = `<!DOCTYPE html>
                 pList.appendChild(item);
                 var fill = item.querySelector('.progress-fill');
                 var pct = item.querySelector('.pct');
-
                 var fd = new FormData();
-                fd.append('file', file);
-                fd.append('folder', folder);
+                fd.append('file', file); fd.append('folder', folder);
                 var xhr = new XMLHttpRequest();
                 xhr.open('POST', '/upload');
                 xhr.upload.onprogress = function(e) {
-                    if (e.lengthComputable) {
-                        var p = Math.round(e.loaded / e.total * 100);
-                        fill.style.width = p + '%';
-                        pct.textContent = p + '%';
-                    }
+                    if (e.lengthComputable) { var p = Math.round(e.loaded / e.total * 100); fill.style.width = p + '%'; pct.textContent = p + '%'; }
                 };
                 xhr.onload = function() {
                     if (xhr.status === 401) { location.href = '/login'; return; }
-                    item.classList.add('done');
-                    fill.style.width = '100%'; pct.textContent = '✓';
+                    item.classList.add('done'); fill.style.width = '100%'; pct.textContent = '✓';
                     setTimeout(function() { item.remove(); }, 2000);
-                    try { resolve(JSON.parse(xhr.responseText)); }
-                    catch(e) { reject(e); }
+                    try { resolve(JSON.parse(xhr.responseText)); } catch(e) { reject(e); }
                 };
                 xhr.onerror = function() { pct.textContent = '✗'; reject(new Error('fail')); };
                 xhr.send(fd);
@@ -589,10 +565,8 @@ export const htmlContent = `<!DOCTYPE html>
                 if (append && pageCursor) url += '&cursor=' + encodeURIComponent(pageCursor);
                 var res = await authFetch(url);
                 var data = await res.json();
-                pageCursor = data.cursor;
-                hasMore = data.hasMore;
+                pageCursor = data.cursor; hasMore = data.hasMore;
                 D('more-wrap').style.display = hasMore ? '' : 'none';
-
                 if (!append) gallery.innerHTML = '';
                 if (data.images && data.images.length) {
                     var grid = gallery.querySelector('.grid');
@@ -607,30 +581,24 @@ export const htmlContent = `<!DOCTYPE html>
 
         function renderItem(grid, img, idx) {
             var el = document.createElement('div');
-            el.className = 'grid-item';
-            el.setAttribute('data-key', img.key);
+            el.className = 'grid-item'; el.setAttribute('data-key', img.key);
             if (selectedKeys.has(img.key)) el.classList.add('selected');
-
             el.innerHTML = '<div class="check">✓</div><img><div class="overlay"><div class="info">' + (img.name || '') + ' · ' + fmtSize(img.size) + '</div><div class="btns"><button class="btn-url" title="复制URL">URL</button><button class="btn-md" title="复制Markdown">MD</button><button class="btn-html" title="复制HTML">HTML</button><button class="btn-rm" title="删除">🗑</button></div></div>';
-
             var imgEl = el.querySelector('img');
             var observer = new IntersectionObserver(function(entries) {
                 if (entries[0].isIntersecting) {
                     var image = new Image();
                     image.onload = function() { imgEl.src = img.thumb; el.classList.add('loaded'); };
                     image.onerror = function() { imgEl.src = img.url; el.classList.add('loaded'); };
-                    image.src = img.thumb;
-                    observer.disconnect();
+                    image.src = img.thumb; observer.disconnect();
                 }
             }, { rootMargin: '200px' });
             observer.observe(el);
-
             el.onclick = function(e) {
                 if (e.target.closest('.btns')) return;
                 if (selectMode) { toggleSelect(img.key, el); return; }
                 openPreview(idx);
             };
-
             el.querySelector('.btn-url').onclick = function(e) { e.stopPropagation(); copyText(img.url, 'URL 已复制'); };
             el.querySelector('.btn-md').onclick = function(e) { e.stopPropagation(); copyText('![](' + img.url + ')', 'Markdown 已复制'); };
             el.querySelector('.btn-html').onclick = function(e) { e.stopPropagation(); copyText('<img src="' + img.url + '">', 'HTML 已复制'); };
@@ -638,8 +606,7 @@ export const htmlContent = `<!DOCTYPE html>
                 e.stopPropagation();
                 if (!confirm('确定删除？')) return;
                 authFetch('/api/images/' + encodeURIComponent(img.key), { method: 'DELETE' }).then(function() {
-                    showToast('已删除');
-                    el.remove();
+                    showToast('已删除'); el.remove();
                     allImages = allImages.filter(function(x) { return x.key !== img.key; });
                 });
             };
@@ -658,8 +625,7 @@ export const htmlContent = `<!DOCTYPE html>
         D('cancel-sel-btn').onclick = function() { exitSelectMode(); };
 
         function exitSelectMode() {
-            selectMode = false;
-            selectedKeys.clear();
+            selectMode = false; selectedKeys.clear();
             document.body.classList.remove('select-mode');
             D('select-btn').textContent = '选择';
             D('batch-bar').classList.remove('show');
@@ -679,55 +645,40 @@ export const htmlContent = `<!DOCTYPE html>
             if (!keys.length || !confirm('确定删除 ' + keys.length + ' 张图片？')) return;
             try {
                 await authFetch('/api/batch-delete', {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
+                    method: 'POST', headers: { 'Content-Type': 'application/json' },
                     body: JSON.stringify({ keys: keys }),
                 });
                 showToast(keys.length + ' 张已删除');
-                exitSelectMode();
-                allImages = []; pageCursor = null;
-                loadGallery(false);
+                exitSelectMode(); allImages = []; pageCursor = null; loadGallery(false);
             } catch(e) { showToast('删除失败'); }
         };
 
         /* ── Preview ── */
         function openPreview(idx) {
             if (idx < 0 || idx >= allImages.length) return;
-            previewIdx = idx;
-            var img = allImages[idx];
+            previewIdx = idx; var img = allImages[idx];
             D('preview').src = img.url;
             D('modal-info').textContent = (img.name || '') + ' · ' + fmtSize(img.size) + ' · ' + fmtDate(img.uploaded);
-            D('modal').classList.add('show');
-            document.body.style.overflow = 'hidden';
+            D('modal').classList.add('show'); document.body.style.overflow = 'hidden';
         }
-        function closePreview() {
-            D('modal').classList.remove('show');
-            document.body.style.overflow = '';
-            previewIdx = -1;
-        }
+        function closePreview() { D('modal').classList.remove('show'); document.body.style.overflow = ''; previewIdx = -1; }
         D('modal-close').onclick = closePreview;
         D('modal').onclick = function(e) { if (e.target === D('modal')) closePreview(); };
         D('prev-btn').onclick = function() { if (previewIdx > 0) openPreview(previewIdx - 1); };
         D('next-btn').onclick = function() { if (previewIdx < allImages.length - 1) openPreview(previewIdx + 1); };
 
-        /* ── Keyboard ── */
         document.onkeydown = function(e) {
             if (D('modal').classList.contains('show')) {
                 if (e.key === 'Escape') closePreview();
-                else if (e.key === 'ArrowLeft') { if (previewIdx > 0) openPreview(previewIdx - 1); }
-                else if (e.key === 'ArrowRight') { if (previewIdx < allImages.length - 1) openPreview(previewIdx + 1); }
-            } else if (e.key === 'Escape' && selectMode) {
-                exitSelectMode();
-            }
+                else if (e.key === 'ArrowLeft' && previewIdx > 0) openPreview(previewIdx - 1);
+                else if (e.key === 'ArrowRight' && previewIdx < allImages.length - 1) openPreview(previewIdx + 1);
+            } else if (e.key === 'Escape' && selectMode) { exitSelectMode(); }
         };
 
-        /* ── Load More & Refresh ── */
         D('more-btn').onclick = function() { loadGallery(true); };
         D('refresh-btn').onclick = function() { allImages = []; pageCursor = null; loadFolders(); loadGallery(false); };
 
-        /* ── Init ── */
-        loadFolders();
-        loadGallery(false);
+        loadFolders(); loadGallery(false);
     })();
     </script>
 </body>
