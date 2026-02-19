@@ -47,7 +47,9 @@ export const loginPage = `<!DOCTYPE html>
         .card {
             background: var(--card); border: 1px solid var(--border);
             border-radius: calc(var(--radius) + 2px); padding: 32px; width: 100%; max-width: 360px;
+            opacity: 0; transform: translateY(30px) scale(0.96);
         }
+        .anim-item { opacity: 0; transform: translateY(15px); }
         .logo { text-align: center; margin-bottom: 6px; font-size: 32px; }
         h1 { text-align: center; font-size: 18px; font-weight: 600; color: var(--fg); margin-bottom: 2px; letter-spacing: -0.025em; }
         .sub { text-align: center; font-size: 13px; color: var(--muted-fg); margin-bottom: 24px; }
@@ -67,25 +69,48 @@ export const loginPage = `<!DOCTYPE html>
         .btn:hover { opacity: 0.9; }
         .btn:disabled { opacity: 0.5; cursor: not-allowed; }
         .err { color: var(--destructive); font-size: 13px; text-align: center; margin-top: 12px; display: none; }
+        @keyframes shake { 0%,100%{transform:translateX(0)} 20%,60%{transform:translateX(-8px)} 40%,80%{transform:translateX(8px)} }
     </style>
 </head>
 <body>
-    <div class="card">
-        <div class="logo">📷</div>
-        <h1>图床</h1>
-        <p class="sub">登录以管理您的图片</p>
+    <div class="card" id="card">
+        <div class="logo anim-item">📷</div>
+        <h1 class="anim-item">图床</h1>
+        <p class="sub anim-item">登录以管理您的图片</p>
         <form id="form">
-            <div class="field"><label>用户名</label><input type="text" name="username" required autofocus placeholder="输入用户名"></div>
-            <div class="field"><label>密码</label><input type="password" name="password" required placeholder="输入密码"></div>
-            <button type="submit" class="btn" id="sbtn">登录</button>
+            <div class="field anim-item"><label>用户名</label><input type="text" name="username" required autofocus placeholder="输入用户名"></div>
+            <div class="field anim-item"><label>密码</label><input type="password" name="password" required placeholder="输入密码"></div>
+            <button type="submit" class="btn anim-item" id="sbtn">登录</button>
             <div class="err" id="err"></div>
         </form>
     </div>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/animejs/3.2.2/anime.min.js"></script>
     <script>
         (function(){
             var t = localStorage.getItem('theme');
             if (t) document.documentElement.setAttribute('data-theme', t);
         })();
+
+        /* ── 入场动画 ── */
+        anime({
+            targets: '#card',
+            opacity: [0, 1],
+            translateY: [30, 0],
+            scale: [0.96, 1],
+            duration: 600,
+            easing: 'easeOutCubic',
+            complete: function() {
+                anime({
+                    targets: '.anim-item',
+                    opacity: [0, 1],
+                    translateY: [15, 0],
+                    delay: anime.stagger(80),
+                    duration: 500,
+                    easing: 'easeOutCubic',
+                });
+            }
+        });
+
         document.getElementById('form').onsubmit = async function(e) {
             e.preventDefault();
             var btn = document.getElementById('sbtn');
@@ -94,10 +119,19 @@ export const loginPage = `<!DOCTYPE html>
             try {
                 var res = await fetch('/api/login', { method: 'POST', body: new FormData(e.target) });
                 var data = await res.json();
-                if (data.success) { location.href = '/'; }
-                else { err.textContent = data.message || '登录失败'; err.style.display = 'block'; }
-            } catch(ex) { err.textContent = '网络错误'; err.style.display = 'block'; }
-            btn.disabled = false; btn.textContent = '登录';
+                if (data.success) {
+                    anime({ targets: '#card', scale: [1, 1.03, 1], duration: 300, easing: 'easeInOutQuad',
+                        complete: function() { location.href = '/'; } });
+                } else {
+                    err.textContent = data.message || '登录失败'; err.style.display = 'block';
+                    anime({ targets: '#card', keyframes: [{translateX:-8},{translateX:8},{translateX:-5},{translateX:5},{translateX:0}], duration: 400, easing: 'easeInOutQuad' });
+                    btn.disabled = false; btn.textContent = '登录';
+                }
+            } catch(ex) {
+                err.textContent = '网络错误'; err.style.display = 'block';
+                anime({ targets: '#card', keyframes: [{translateX:-8},{translateX:8},{translateX:-5},{translateX:5},{translateX:0}], duration: 400, easing: 'easeInOutQuad' });
+                btn.disabled = false; btn.textContent = '登录';
+            }
         };
     </script>
 </body>
@@ -326,9 +360,8 @@ export const htmlContent = `<!DOCTYPE html>
             position: fixed; bottom: 20px; right: 20px; z-index: 300;
             padding: 10px 16px; background: var(--fg); color: var(--bg);
             border-radius: var(--radius); font-size: 13px;
-            transform: translateY(60px); opacity: 0; transition: all 0.2s ease;
+            transform: translateY(60px); opacity: 0;
         }
-        .toast.show { transform: translateY(0); opacity: 1; }
 
         /* ── Touch devices: always show overlay ── */
         @media (hover: none) {
@@ -395,7 +428,6 @@ export const htmlContent = `<!DOCTYPE html>
                 white-space: nowrap; max-width: 90vw;
                 bottom: calc(16px + env(safe-area-inset-bottom, 0));
             }
-            .toast.show { transform: translateX(-50%) translateY(0); }
 
             /* Load more */
             .load-more { width: 100%; height: 40px; font-size: 14px; }
@@ -462,15 +494,30 @@ export const htmlContent = `<!DOCTYPE html>
 
     <div class="toast" id="toast"></div>
 
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/animejs/3.2.2/anime.min.js"></script>
     <script>
     (function() {
         var D = function(id) { return document.getElementById(id); };
-        var toastTimer;
+        var isMobile = window.innerWidth <= 640;
+        var toastTimer, toastAnim;
         function showToast(msg) {
             var t = D('toast');
-            t.textContent = msg; t.classList.add('show');
+            t.textContent = msg;
+            if (toastAnim) toastAnim.pause();
             clearTimeout(toastTimer);
-            toastTimer = setTimeout(function() { t.classList.remove('show'); }, 2200);
+            toastAnim = anime({
+                targets: t,
+                translateY: isMobile ? undefined : [60, 0],
+                translateX: isMobile ? ['-50%', '-50%'] : undefined,
+                opacity: [0, 1],
+                scale: [0.9, 1],
+                duration: 500,
+                easing: 'easeOutElastic(1, 0.6)',
+            });
+            if (isMobile) { anime.set(t, { translateX: '-50%', translateY: 0 }); }
+            toastTimer = setTimeout(function() {
+                anime({ targets: t, opacity: 0, translateY: isMobile ? 0 : 20, duration: 250, easing: 'easeInQuad' });
+            }, 2200);
         }
         function fmtSize(b) {
             if (b < 1024) return b + ' B';
@@ -626,6 +673,21 @@ export const htmlContent = `<!DOCTYPE html>
         }
 
         /* ── Gallery ── */
+        function animateNewItems(grid, startIndex) {
+            var items = Array.from(grid.children).slice(startIndex);
+            if (!items.length) return;
+            anime.set(items, { opacity: 0, scale: 0.85, translateY: 20 });
+            anime({
+                targets: items,
+                opacity: [0, 1],
+                scale: [0.85, 1],
+                translateY: [20, 0],
+                delay: anime.stagger(40, { start: 100 }),
+                duration: 450,
+                easing: 'easeOutCubic',
+            });
+        }
+
         async function loadGallery(append) {
             var gallery = D('gallery');
             if (!append) { gallery.innerHTML = '<div class="empty">加载中...</div>'; allImages = []; }
@@ -640,8 +702,10 @@ export const htmlContent = `<!DOCTYPE html>
                 if (data.images && data.images.length) {
                     var grid = gallery.querySelector('.grid');
                     if (!grid) { grid = document.createElement('div'); grid.className = 'grid'; gallery.appendChild(grid); }
+                    var prevCount = grid.children.length;
                     allImages = allImages.concat(data.images);
                     data.images.forEach(function(img, i) { renderItem(grid, img, allImages.length - data.images.length + i); });
+                    animateNewItems(grid, prevCount);
                 } else if (!append) {
                     gallery.innerHTML = '<div class="empty"><svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z"/></svg><p>暂无图片</p></div>';
                 }
@@ -675,7 +739,9 @@ export const htmlContent = `<!DOCTYPE html>
                 e.stopPropagation();
                 if (!confirm('确定删除？')) return;
                 authFetch('/api/images/' + encodeURIComponent(img.key), { method: 'DELETE' }).then(function() {
-                    showToast('已删除'); el.remove();
+                    showToast('已删除');
+                    anime({ targets: el, opacity: 0, scale: 0.8, duration: 250, easing: 'easeInQuad',
+                        complete: function() { el.remove(); } });
                     allImages = allImages.filter(function(x) { return x.key !== img.key; });
                 });
             };
@@ -697,7 +763,9 @@ export const htmlContent = `<!DOCTYPE html>
             selectMode = false; selectedKeys.clear();
             document.body.classList.remove('select-mode');
             D('select-btn').textContent = '选择';
-            D('batch-bar').classList.remove('show');
+            var bar = D('batch-bar');
+            anime({ targets: bar, bottom: isMobile ? -60 : -56, duration: 250, easing: 'easeInQuad',
+                complete: function() { bar.classList.remove('show'); } });
             document.querySelectorAll('.grid-item.selected').forEach(function(el) { el.classList.remove('selected'); });
         }
 
@@ -706,7 +774,14 @@ export const htmlContent = `<!DOCTYPE html>
             else { selectedKeys.add(key); el.classList.add('selected'); }
             var n = selectedKeys.size;
             D('sel-count').textContent = n + ' 张已选';
-            D('batch-bar').classList.toggle('show', n > 0);
+            var bar = D('batch-bar');
+            if (n > 0 && !bar.classList.contains('show')) {
+                bar.classList.add('show');
+                anime({ targets: bar, bottom: isMobile ? 12 : 20, duration: 400, easing: 'easeOutElastic(1, 0.7)' });
+            } else if (n === 0) {
+                anime({ targets: bar, bottom: isMobile ? -60 : -56, duration: 250, easing: 'easeInQuad',
+                    complete: function() { bar.classList.remove('show'); } });
+            }
         }
 
         D('batch-del-btn').onclick = async function() {
@@ -729,8 +804,16 @@ export const htmlContent = `<!DOCTYPE html>
             D('preview').src = img.url;
             D('modal-info').textContent = (img.name || '') + ' · ' + fmtSize(img.size) + ' · ' + fmtDate(img.uploaded);
             D('modal').classList.add('show'); document.body.style.overflow = 'hidden';
+            anime.set('#preview', { scale: 0.85, opacity: 0 });
+            anime({ targets: '#preview', scale: [0.85, 1], opacity: [0, 1], duration: 350, easing: 'easeOutCubic' });
+            anime({ targets: '#modal', opacity: [0, 1], duration: 250, easing: 'easeOutQuad' });
         }
-        function closePreview() { D('modal').classList.remove('show'); document.body.style.overflow = ''; previewIdx = -1; }
+        function closePreview() {
+            anime({ targets: '#preview', scale: 0.9, opacity: 0, duration: 200, easing: 'easeInQuad' });
+            anime({ targets: '#modal', opacity: 0, duration: 200, easing: 'easeInQuad',
+                complete: function() { D('modal').classList.remove('show'); document.body.style.overflow = ''; anime.set('#modal', {opacity: 1}); previewIdx = -1; }
+            });
+        }
         D('modal-close').onclick = closePreview;
         D('modal').onclick = function(e) { if (e.target === D('modal')) closePreview(); };
         D('prev-btn').onclick = function() { if (previewIdx > 0) openPreview(previewIdx - 1); };
