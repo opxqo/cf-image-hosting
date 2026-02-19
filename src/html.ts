@@ -43,11 +43,17 @@ export const loginPage = `<!DOCTYPE html>
         body {
             font-family: var(--font); background: var(--bg); color: var(--fg);
             min-height: 100vh; display: flex; align-items: center; justify-content: center;
+            overflow: hidden;
         }
+        #particles { position: fixed; inset: 0; z-index: 0; pointer-events: none; }
         .card {
+            position: relative; z-index: 1;
             background: var(--card); border: 1px solid var(--border);
             border-radius: calc(var(--radius) + 2px); padding: 32px; width: 100%; max-width: 360px;
             opacity: 0; transform: translateY(30px) scale(0.96);
+            transform-style: preserve-3d; perspective: 800px;
+            backdrop-filter: blur(12px);
+            box-shadow: 0 8px 32px rgba(0,0,0,0.3);
         }
         .anim-item { opacity: 0; transform: translateY(15px); }
         .logo { text-align: center; margin-bottom: 6px; font-size: 32px; }
@@ -60,19 +66,21 @@ export const loginPage = `<!DOCTYPE html>
             border: 1px solid var(--input); border-radius: var(--radius);
             font-size: 13px; outline: none; transition: border-color 0.15s, box-shadow 0.15s;
         }
-        .field input:focus { border-color: var(--ring); box-shadow: 0 0 0 2px color-mix(in srgb, var(--ring) 20%, transparent); }
+        .field input:focus { border-color: var(--ring); box-shadow: 0 0 0 3px color-mix(in srgb, var(--ring) 25%, transparent); }
         .btn {
             width: 100%; padding: 8px; background: var(--primary); color: var(--primary-fg); border: none;
             border-radius: var(--radius); font-size: 13px; font-weight: 500;
-            cursor: pointer; transition: opacity 0.15s;
+            cursor: pointer; transition: opacity 0.15s, box-shadow 0.2s;
+            position: relative; overflow: hidden;
         }
-        .btn:hover { opacity: 0.9; }
+        .btn:hover { opacity: 0.9; box-shadow: 0 0 20px color-mix(in srgb, var(--primary) 30%, transparent); }
         .btn:disabled { opacity: 0.5; cursor: not-allowed; }
         .err { color: var(--destructive); font-size: 13px; text-align: center; margin-top: 12px; display: none; }
-        @keyframes shake { 0%,100%{transform:translateX(0)} 20%,60%{transform:translateX(-8px)} 40%,80%{transform:translateX(8px)} }
+        .success-flash { position: fixed; inset: 0; background: radial-gradient(circle, rgba(34,197,94,0.15) 0%, transparent 70%); z-index: 100; pointer-events: none; }
     </style>
 </head>
 <body>
+    <canvas id="particles"></canvas>
     <div class="card" id="card">
         <div class="logo anim-item">📷</div>
         <h1 class="anim-item">图床</h1>
@@ -91,24 +99,60 @@ export const loginPage = `<!DOCTYPE html>
             if (t) document.documentElement.setAttribute('data-theme', t);
         })();
 
-        /* ── 入场动画 ── */
-        anime({
-            targets: '#card',
-            opacity: [0, 1],
-            translateY: [30, 0],
-            scale: [0.96, 1],
-            duration: 600,
-            easing: 'easeOutCubic',
-            complete: function() {
-                anime({
-                    targets: '.anim-item',
-                    opacity: [0, 1],
-                    translateY: [15, 0],
-                    delay: anime.stagger(80),
-                    duration: 500,
-                    easing: 'easeOutCubic',
+        /* ── 浮动粒子背景 ── */
+        (function(){
+            var c = document.getElementById('particles'), ctx = c.getContext('2d');
+            var w, h, dots = [];
+            var isDark = !document.documentElement.hasAttribute('data-theme') || document.documentElement.getAttribute('data-theme') !== 'light';
+            function resize() { w = c.width = window.innerWidth; h = c.height = window.innerHeight; }
+            resize(); window.addEventListener('resize', resize);
+            for (var i = 0; i < 50; i++) dots.push({ x: Math.random()*w, y: Math.random()*h, r: Math.random()*2+0.5, dx: (Math.random()-0.5)*0.4, dy: (Math.random()-0.5)*0.4, o: Math.random()*0.4+0.1 });
+            function draw() {
+                ctx.clearRect(0,0,w,h);
+                var clr = isDark ? '255,255,255' : '0,0,0';
+                dots.forEach(function(d) {
+                    d.x += d.dx; d.y += d.dy;
+                    if (d.x < 0 || d.x > w) d.dx *= -1;
+                    if (d.y < 0 || d.y > h) d.dy *= -1;
+                    ctx.beginPath(); ctx.arc(d.x, d.y, d.r, 0, Math.PI*2);
+                    ctx.fillStyle = 'rgba('+clr+','+d.o+')'; ctx.fill();
                 });
+                // 连线
+                for (var i = 0; i < dots.length; i++) for (var j = i+1; j < dots.length; j++) {
+                    var dx = dots[i].x-dots[j].x, dy = dots[i].y-dots[j].y, dist = Math.sqrt(dx*dx+dy*dy);
+                    if (dist < 120) { ctx.beginPath(); ctx.moveTo(dots[i].x,dots[i].y); ctx.lineTo(dots[j].x,dots[j].y); ctx.strokeStyle='rgba('+clr+','+(0.08*(1-dist/120))+')'; ctx.stroke(); }
+                }
+                requestAnimationFrame(draw);
             }
+            draw();
+        })();
+
+        /* ── 3D 视差卡片 ── */
+        var card = document.getElementById('card');
+        document.addEventListener('mousemove', function(e) {
+            var cx = window.innerWidth/2, cy = window.innerHeight/2;
+            var rx = (e.clientY - cy) / cy * -8;
+            var ry = (e.clientX - cx) / cx * 8;
+            anime({ targets: card, rotateX: rx, rotateY: ry, duration: 400, easing: 'easeOutQuad' });
+        });
+        document.addEventListener('mouseleave', function() {
+            anime({ targets: card, rotateX: 0, rotateY: 0, duration: 600, easing: 'easeOutElastic(1, 0.5)' });
+        });
+
+        /* ── 入场动画时间线 ── */
+        var tl = anime.timeline({ easing: 'easeOutCubic' });
+        tl.add({ targets: '#card', opacity: [0, 1], translateY: [40, 0], scale: [0.92, 1], duration: 700 })
+          .add({ targets: '.anim-item', opacity: [0, 1], translateY: [20, 0], delay: anime.stagger(90), duration: 500 }, '-=300')
+          .add({ targets: '.logo', rotate: ['-15deg', '0deg'], scale: [0.5, 1], duration: 600, easing: 'easeOutElastic(1, 0.5)' }, '-=600');
+
+        /* ── 输入框聚焦高亮 ── */
+        document.querySelectorAll('.field input').forEach(function(inp) {
+            inp.addEventListener('focus', function() {
+                anime({ targets: inp.parentElement, scale: [1, 1.02], duration: 200, easing: 'easeOutQuad' });
+            });
+            inp.addEventListener('blur', function() {
+                anime({ targets: inp.parentElement, scale: [1.02, 1], duration: 200, easing: 'easeOutQuad' });
+            });
         });
 
         document.getElementById('form').onsubmit = async function(e) {
@@ -116,21 +160,28 @@ export const loginPage = `<!DOCTYPE html>
             var btn = document.getElementById('sbtn');
             var err = document.getElementById('err');
             btn.disabled = true; btn.textContent = '登录中...'; err.style.display = 'none';
+            // 按钮加载动画
+            anime({ targets: btn, scale: [1, 0.97], duration: 150, easing: 'easeInQuad' });
             try {
                 var res = await fetch('/api/login', { method: 'POST', body: new FormData(e.target) });
                 var data = await res.json();
                 if (data.success) {
-                    anime({ targets: '#card', scale: [1, 1.03, 1], duration: 300, easing: 'easeInOutQuad',
+                    // 成功闪光 + 卡片飞走
+                    var flash = document.createElement('div'); flash.className = 'success-flash'; document.body.appendChild(flash);
+                    anime({ targets: flash, opacity: [0,1,0], duration: 600, easing: 'easeInOutQuad' });
+                    anime({ targets: '#card', scale: [1, 0.95], opacity: [1, 0], translateY: [0, -30], duration: 500, easing: 'easeInCubic', delay: 200,
                         complete: function() { location.href = '/'; } });
                 } else {
                     err.textContent = data.message || '登录失败'; err.style.display = 'block';
-                    anime({ targets: '#card', keyframes: [{translateX:-8},{translateX:8},{translateX:-5},{translateX:5},{translateX:0}], duration: 400, easing: 'easeInOutQuad' });
-                    btn.disabled = false; btn.textContent = '登录';
+                    anime({ targets: err, opacity: [0,1], translateY: [10,0], duration: 300, easing: 'easeOutQuad' });
+                    anime({ targets: '#card', keyframes: [{translateX:-10},{translateX:10},{translateX:-6},{translateX:6},{translateX:-3},{translateX:3},{translateX:0}], duration: 500, easing: 'easeInOutQuad' });
+                    anime({ targets: btn, scale: 1, duration: 200 }); btn.disabled = false; btn.textContent = '登录';
                 }
             } catch(ex) {
                 err.textContent = '网络错误'; err.style.display = 'block';
-                anime({ targets: '#card', keyframes: [{translateX:-8},{translateX:8},{translateX:-5},{translateX:5},{translateX:0}], duration: 400, easing: 'easeInOutQuad' });
-                btn.disabled = false; btn.textContent = '登录';
+                anime({ targets: err, opacity: [0,1], translateY: [10,0], duration: 300, easing: 'easeOutQuad' });
+                anime({ targets: '#card', keyframes: [{translateX:-10},{translateX:10},{translateX:-6},{translateX:6},{translateX:-3},{translateX:3},{translateX:0}], duration: 500, easing: 'easeInOutQuad' });
+                anime({ targets: btn, scale: 1, duration: 200 }); btn.disabled = false; btn.textContent = '登录';
             }
         };
     </script>
@@ -155,8 +206,9 @@ export const htmlContent = `<!DOCTYPE html>
         .header {
             position: sticky; top: 0; z-index: 50;
             display: flex; align-items: center; justify-content: space-between;
-            padding: 12px 24px; background: var(--bg);
+            padding: 12px 24px; background: color-mix(in srgb, var(--bg) 85%, transparent);
             border-bottom: 1px solid var(--border);
+            backdrop-filter: blur(12px); -webkit-backdrop-filter: blur(12px);
         }
         .header h1 { font-size: 15px; font-weight: 600; letter-spacing: -0.025em; display: flex; align-items: center; gap: 6px; }
         .header-actions { display: flex; gap: 6px; align-items: center; }
@@ -218,9 +270,21 @@ export const htmlContent = `<!DOCTYPE html>
             border: 1px dashed var(--border); border-radius: var(--radius);
             padding: 32px; text-align: center; cursor: pointer;
             transition: border-color 0.15s, background 0.15s;
+            position: relative; overflow: hidden;
         }
+        .dropzone::after {
+            content: ''; position: absolute; inset: -2px;
+            border-radius: inherit;
+            background: conic-gradient(from var(--glow-angle, 0deg), transparent 60%, color-mix(in srgb, var(--fg) 8%, transparent) 80%, transparent 100%);
+            opacity: 0; transition: opacity 0.3s; z-index: -1;
+            animation: dropzone-glow 4s linear infinite;
+        }
+        @keyframes dropzone-glow { to { --glow-angle: 360deg; } }
+        @property --glow-angle { syntax: '<angle>'; initial-value: 0deg; inherits: false; }
+        .dropzone:hover::after, .dropzone.active::after { opacity: 1; }
         .dropzone:hover, .dropzone.active { border-color: var(--muted-fg); background: var(--muted); }
-        .dropzone svg { width: 32px; height: 32px; color: var(--muted-fg); margin-bottom: 6px; }
+        .dropzone svg { width: 32px; height: 32px; color: var(--muted-fg); margin-bottom: 6px; transition: transform 0.3s; }
+        .dropzone:hover svg { transform: translateY(-3px); }
         .dropzone p { color: var(--muted-fg); font-size: 13px; }
         .dropzone .hint { color: var(--muted-fg); font-size: 12px; margin-top: 2px; opacity: 0.7; }
 
@@ -277,9 +341,11 @@ export const htmlContent = `<!DOCTYPE html>
         .grid-item {
             position: relative; aspect-ratio: 1; background: var(--muted);
             border: 1px solid var(--border); border-radius: var(--radius);
-            overflow: hidden; cursor: pointer; transition: border-color 0.15s;
+            overflow: hidden; cursor: pointer;
+            transition: border-color 0.25s, transform 0.3s ease, box-shadow 0.3s ease;
+            transform-style: preserve-3d; will-change: transform;
         }
-        .grid-item:hover { border-color: var(--muted-fg); }
+        .grid-item:hover { border-color: var(--muted-fg); box-shadow: 0 8px 25px rgba(0,0,0,0.15); }
         .grid-item.selected { border-color: var(--ring); box-shadow: 0 0 0 1px var(--ring); }
         .grid-item::before {
             content: ''; position: absolute; inset: 0;
@@ -288,8 +354,9 @@ export const htmlContent = `<!DOCTYPE html>
         }
         .grid-item.loaded::before { display: none; }
         @keyframes shimmer { 0%{background-position:200% 0} 100%{background-position:-200% 0} }
-        .grid-item img { width: 100%; height: 100%; object-fit: cover; opacity: 0; transition: opacity 0.2s; }
+        .grid-item img { width: 100%; height: 100%; object-fit: cover; opacity: 0; transition: opacity 0.3s, transform 0.4s ease; }
         .grid-item.loaded img { opacity: 1; }
+        .grid-item:hover img { transform: scale(1.05); }
 
         .grid-item .check {
             position: absolute; top: 6px; left: 6px; width: 20px; height: 20px;
@@ -361,6 +428,14 @@ export const htmlContent = `<!DOCTYPE html>
             padding: 10px 16px; background: var(--fg); color: var(--bg);
             border-radius: var(--radius); font-size: 13px;
             transform: translateY(60px); opacity: 0;
+            box-shadow: 0 4px 20px rgba(0,0,0,0.2);
+        }
+
+        /* ── Confetti ── */
+        .confetti-container { position: fixed; inset: 0; pointer-events: none; z-index: 400; overflow: hidden; }
+        .confetti-piece {
+            position: absolute; width: 8px; height: 8px; border-radius: 2px;
+            top: -10px; opacity: 0;
         }
 
         /* ── Touch devices: always show overlay ── */
@@ -554,7 +629,10 @@ export const htmlContent = `<!DOCTYPE html>
             localStorage.setItem('theme', theme);
         }
         applyTheme();
-        D('theme-btn').onclick = function() { theme = theme === 'dark' ? 'light' : 'dark'; applyTheme(); };
+        D('theme-btn').onclick = function() {
+            theme = theme === 'dark' ? 'light' : 'dark'; applyTheme();
+            anime({ targets: '#theme-btn', rotate: '+=360', scale: [0.5, 1], duration: 500, easing: 'easeOutElastic(1, 0.5)' });
+        };
 
         D('logout-btn').onclick = async function() {
             await fetch('/api/logout', { method: 'POST' });
@@ -619,9 +697,19 @@ export const htmlContent = `<!DOCTYPE html>
         /* ── Upload ── */
         var dropzone = D('dropzone'), fileInput = D('file-input');
         dropzone.onclick = function() { fileInput.click(); };
-        dropzone.ondragover = function(e) { e.preventDefault(); dropzone.classList.add('active'); };
-        dropzone.ondragleave = function() { dropzone.classList.remove('active'); };
-        dropzone.ondrop = function(e) { e.preventDefault(); dropzone.classList.remove('active'); handleFiles(e.dataTransfer.files); };
+        dropzone.ondragover = function(e) {
+            e.preventDefault(); dropzone.classList.add('active');
+            anime({ targets: dropzone.querySelector('svg'), translateY: -5, duration: 300, easing: 'easeOutQuad' });
+        };
+        dropzone.ondragleave = function() {
+            dropzone.classList.remove('active');
+            anime({ targets: dropzone.querySelector('svg'), translateY: 0, duration: 300, easing: 'easeOutQuad' });
+        };
+        dropzone.ondrop = function(e) {
+            e.preventDefault(); dropzone.classList.remove('active');
+            anime({ targets: dropzone, scale: [0.97, 1], duration: 300, easing: 'easeOutElastic(1, 0.5)' });
+            handleFiles(e.dataTransfer.files);
+        };
         fileInput.onchange = function(e) { handleFiles(e.target.files); fileInput.value = ''; };
         document.onpaste = function(e) {
             for (var i = 0; i < e.clipboardData.items.length; i++) {
@@ -629,6 +717,32 @@ export const htmlContent = `<!DOCTYPE html>
                 if (item.type.indexOf('image/') === 0) { handleFiles([item.getAsFile()]); break; }
             }
         };
+
+        /* ── Confetti ── */
+        function fireConfetti() {
+            var container = document.createElement('div'); container.className = 'confetti-container'; document.body.appendChild(container);
+            var colors = ['#ff6b6b','#feca57','#48dbfb','#ff9ff3','#54a0ff','#5f27cd','#01a3a4','#f368e0'];
+            for (var i = 0; i < 40; i++) {
+                var piece = document.createElement('div'); piece.className = 'confetti-piece';
+                piece.style.left = (Math.random() * 100) + '%';
+                piece.style.background = colors[Math.floor(Math.random() * colors.length)];
+                piece.style.width = (Math.random() * 8 + 4) + 'px';
+                piece.style.height = (Math.random() * 8 + 4) + 'px';
+                piece.style.borderRadius = Math.random() > 0.5 ? '50%' : '2px';
+                container.appendChild(piece);
+            }
+            anime({
+                targets: container.querySelectorAll('.confetti-piece'),
+                translateY: function() { return [anime.random(-200, -50), anime.random(400, 800)]; },
+                translateX: function() { return anime.random(-200, 200); },
+                rotate: function() { return anime.random(0, 720); },
+                opacity: [1, 0],
+                duration: function() { return anime.random(1200, 2000); },
+                delay: anime.stagger(20),
+                easing: 'easeOutQuad',
+                complete: function() { container.remove(); }
+            });
+        }
 
         function handleFiles(files) {
             var folder = D('up-folder').value;
@@ -639,6 +753,7 @@ export const htmlContent = `<!DOCTYPE html>
                     var last = ok[ok.length - 1].value;
                     navigator.clipboard.writeText(last.url).catch(function(){});
                     showToast(ok.length + ' 张已上传，链接已复制');
+                    fireConfetti();
                     currentFolder = folder; allImages = []; pageCursor = null;
                     loadFolders(); loadGallery(false);
                 }
@@ -652,6 +767,8 @@ export const htmlContent = `<!DOCTYPE html>
                 item.className = 'progress-item';
                 item.innerHTML = '<span class="name">' + file.name + '</span><div class="progress-bar"><div class="progress-fill" style="width:0%"></div></div><span class="pct">0%</span>';
                 pList.appendChild(item);
+                // 进度项入场动画
+                anime({ targets: item, opacity: [0, 1], translateX: [-20, 0], duration: 300, easing: 'easeOutCubic' });
                 var fill = item.querySelector('.progress-fill');
                 var pct = item.querySelector('.pct');
                 var fd = new FormData();
@@ -664,10 +781,17 @@ export const htmlContent = `<!DOCTYPE html>
                 xhr.onload = function() {
                     if (xhr.status === 401) { location.href = '/login'; return; }
                     item.classList.add('done'); fill.style.width = '100%'; pct.textContent = '✓';
-                    setTimeout(function() { item.remove(); }, 2000);
+                    anime({ targets: item, backgroundColor: 'rgba(34,197,94,0.15)', duration: 400, easing: 'easeOutQuad' });
+                    setTimeout(function() {
+                        anime({ targets: item, opacity: 0, translateX: 20, height: 0, marginBottom: 0, padding: 0, duration: 300, easing: 'easeInQuad', complete: function() { item.remove(); } });
+                    }, 1500);
                     try { resolve(JSON.parse(xhr.responseText)); } catch(e) { reject(e); }
                 };
-                xhr.onerror = function() { pct.textContent = '✗'; reject(new Error('fail')); };
+                xhr.onerror = function() {
+                    pct.textContent = '✗';
+                    anime({ targets: item, backgroundColor: 'rgba(239,68,68,0.15)', duration: 400, easing: 'easeOutQuad' });
+                    reject(new Error('fail'));
+                };
                 xhr.send(fd);
             });
         }
@@ -740,11 +864,26 @@ export const htmlContent = `<!DOCTYPE html>
                 if (!confirm('确定删除？')) return;
                 authFetch('/api/images/' + encodeURIComponent(img.key), { method: 'DELETE' }).then(function() {
                     showToast('已删除');
-                    anime({ targets: el, opacity: 0, scale: 0.8, duration: 250, easing: 'easeInQuad',
+                    anime({ targets: el, opacity: 0, scale: 0.8, rotateY: 15, duration: 350, easing: 'easeInCubic',
                         complete: function() { el.remove(); } });
                     allImages = allImages.filter(function(x) { return x.key !== img.key; });
                 });
             };
+            /* 3D 倾斜 hover */
+            if (!isMobile) {
+                el.onmousemove = function(e) {
+                    var rect = el.getBoundingClientRect();
+                    var x = (e.clientX - rect.left) / rect.width - 0.5;
+                    var y = (e.clientY - rect.top) / rect.height - 0.5;
+                    el.style.transform = 'perspective(600px) rotateY(' + (x*12) + 'deg) rotateX(' + (-y*12) + 'deg) scale(1.03)';
+                };
+                el.onmouseleave = function() {
+                    anime({ targets: el, rotateY: 0, rotateX: 0, scale: 1, duration: 400, easing: 'easeOutQuad',
+                        update: function(anim) { el.style.transform = 'perspective(600px) rotateY('+el.style.getPropertyValue('rotateY')+') rotateX(0) scale(1)'; }
+                    });
+                    el.style.transform = '';
+                };
+            }
             grid.appendChild(el);
         }
 
@@ -828,7 +967,20 @@ export const htmlContent = `<!DOCTYPE html>
         };
 
         D('more-btn').onclick = function() { loadGallery(true); };
-        D('refresh-btn').onclick = function() { allImages = []; pageCursor = null; loadFolders(); loadGallery(false); };
+        D('refresh-btn').onclick = function() {
+            anime({ targets: '#refresh-btn', rotate: '+=360', duration: 500, easing: 'easeInOutQuad' });
+            allImages = []; pageCursor = null; loadFolders(); loadGallery(false);
+        };
+
+        /* ── 页面入场时间线 ── */
+        anime.set('.header', { opacity: 0, translateY: -20 });
+        anime.set('.upload-card', { opacity: 0, translateY: 20, scale: 0.97 });
+        anime.set('.gallery-header', { opacity: 0, translateX: -15 });
+        var pageTL = anime.timeline({ easing: 'easeOutCubic' });
+        pageTL
+            .add({ targets: '.header', opacity: [0, 1], translateY: [-20, 0], duration: 500 })
+            .add({ targets: '.upload-card', opacity: [0, 1], translateY: [20, 0], scale: [0.97, 1], duration: 500 }, '-=300')
+            .add({ targets: '.gallery-header', opacity: [0, 1], translateX: [-15, 0], duration: 400 }, '-=300');
 
         loadFolders(); loadGallery(false);
     })();
