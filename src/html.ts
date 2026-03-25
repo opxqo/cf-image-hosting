@@ -530,9 +530,6 @@ export const htmlContent = `<!DOCTYPE html>
             <div class="upload-top">
                 <select class="folder-select" id="up-folder"><option value="默认">默认</option></select>
                 <button class="btn-outline sm" id="new-folder-btn">+ 新建</button>
-                <label style="display:flex; align-items:center; gap:4px; margin-left:auto; font-size:12px; color:var(--muted-fg); cursor:pointer;" title="开启后复制的链接将自动包含 WebP 转换">
-                    <input type="checkbox" id="webp-cb" style="accent-color:var(--fg); cursor:pointer;"> 自动 WebP
-                </label>
             </div>
             <div class="dropzone" id="dropzone">
                 <svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M12 16V4m0 0L8 8m4-4l4 4M4 14v4a2 2 0 002 2h12a2 2 0 002-2v-4"/></svg>
@@ -545,7 +542,10 @@ export const htmlContent = `<!DOCTYPE html>
 
         <div class="gallery-header">
             <div class="tabs" id="tabs"></div>
-            <div class="gallery-actions">
+            <div class="gallery-actions" style="align-items:center; gap:8px;">
+                <label style="display:flex; align-items:center; gap:4px; font-size:12px; color:var(--muted-fg); cursor:pointer;" title="开启后复制的链接将自动包含 WebP 转换">
+                    <input type="checkbox" id="webp-cb" style="accent-color:var(--fg); cursor:pointer;"> 自动 WebP
+                </label>
                 <button class="btn-outline sm" id="select-btn">选择</button>
                 <button class="btn-outline sm" id="refresh-btn">刷新</button>
             </div>
