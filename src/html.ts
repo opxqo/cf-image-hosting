@@ -530,6 +530,9 @@ export const htmlContent = `<!DOCTYPE html>
             <div class="upload-top">
                 <select class="folder-select" id="up-folder"><option value="默认">默认</option></select>
                 <button class="btn-outline sm" id="new-folder-btn">+ 新建</button>
+                <label style="display:flex; align-items:center; gap:4px; margin-left:auto; font-size:12px; color:var(--muted-fg); cursor:pointer;" title="开启后复制的链接将自动包含 WebP 转换">
+                    <input type="checkbox" id="webp-cb" style="accent-color:var(--fg); cursor:pointer;"> 自动 WebP
+                </label>
             </div>
             <div class="dropzone" id="dropzone">
                 <svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M12 16V4m0 0L8 8m4-4l4 4M4 14v4a2 2 0 002 2h12a2 2 0 002-2v-4"/></svg>
@@ -633,6 +636,22 @@ export const htmlContent = `<!DOCTYPE html>
             theme = theme === 'dark' ? 'light' : 'dark'; applyTheme();
             anime({ targets: '#theme-btn', rotate: '+=360', scale: [0.5, 1], duration: 500, easing: 'easeOutElastic(1, 0.5)' });
         };
+
+        /* ── WebP Switch ── */
+        var webpCb = D('webp-cb');
+        if (localStorage.getItem('useWebp') === 'true') { webpCb.checked = true; }
+        webpCb.onchange = function() { localStorage.setItem('useWebp', webpCb.checked); showToast(webpCb.checked ? '已开启自动 WebP 转换' : '已关闭自动 WebP 转换'); };
+
+        function getImgUrl(u) {
+            if (webpCb && webpCb.checked && u.indexOf('/cdn-cgi/image/') === -1) {
+                var parts = u.split('/');
+                if (parts.length >= 4) {
+                    var path = parts.slice(3).join('/');
+                    return parts[0] + '//' + parts[2] + '/cdn-cgi/image/format=webp/' + path;
+                }
+            }
+            return u;
+        }
 
         D('logout-btn').onclick = async function() {
             await fetch('/api/logout', { method: 'POST' });
@@ -751,7 +770,7 @@ export const htmlContent = `<!DOCTYPE html>
                 var ok = results.filter(function(r) { return r.status === 'fulfilled' && r.value && r.value.success; });
                 if (ok.length > 0) {
                     var last = ok[ok.length - 1].value;
-                    navigator.clipboard.writeText(last.url).catch(function(){});
+                    navigator.clipboard.writeText(getImgUrl(last.url)).catch(function(){});
                     showToast(ok.length + ' 张已上传，链接已复制');
                     fireConfetti();
                     currentFolder = folder; allImages = []; pageCursor = null;
@@ -856,9 +875,9 @@ export const htmlContent = `<!DOCTYPE html>
                 if (selectMode) { toggleSelect(img.key, el); return; }
                 openPreview(idx);
             };
-            el.querySelector('.btn-url').onclick = function(e) { e.stopPropagation(); copyText(img.url, 'URL 已复制'); };
-            el.querySelector('.btn-md').onclick = function(e) { e.stopPropagation(); copyText('![](' + img.url + ')', 'Markdown 已复制'); };
-            el.querySelector('.btn-html').onclick = function(e) { e.stopPropagation(); copyText('<img src="' + img.url + '">', 'HTML 已复制'); };
+            el.querySelector('.btn-url').onclick = function(e) { e.stopPropagation(); copyText(getImgUrl(img.url), 'URL 已复制'); };
+            el.querySelector('.btn-md').onclick = function(e) { e.stopPropagation(); copyText('![](' + getImgUrl(img.url) + ')', 'Markdown 已复制'); };
+            el.querySelector('.btn-html').onclick = function(e) { e.stopPropagation(); copyText('<img src="' + getImgUrl(img.url) + '">', 'HTML 已复制'); };
             el.querySelector('.btn-rm').onclick = function(e) {
                 e.stopPropagation();
                 if (!confirm('确定删除？')) return;
@@ -940,7 +959,7 @@ export const htmlContent = `<!DOCTYPE html>
         function openPreview(idx) {
             if (idx < 0 || idx >= allImages.length) return;
             previewIdx = idx; var img = allImages[idx];
-            D('preview').src = img.url;
+            D('preview').src = getImgUrl(img.url);
             D('modal-info').textContent = (img.name || '') + ' · ' + fmtSize(img.size) + ' · ' + fmtDate(img.uploaded);
             D('modal').classList.add('show'); document.body.style.overflow = 'hidden';
             anime.set('#preview', { scale: 0.85, opacity: 0 });
